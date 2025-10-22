@@ -1,498 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Skunkworks LearnSync Dashboard</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-
-<!-- Charts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/dist/date-fns.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-
-<style>
-:root{
-  --bg:#0b0f14; --panel:#0e1621; --ink:#e6eef7; --muted:#9fb2c9;
-  --line:#172434; --brand:#1365f4; --brand-2:#4cc9f0; --ok:#2a9d8f; --warn:#f4a261; --bad:#e76f51;
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
-
-/* Layout */
-.app{display:grid;grid-template-columns:280px 1fr;height:100vh;overflow:hidden}
-aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
-.brand{padding:18px 18px;border-bottom:1px solid var(--line);font-weight:700;letter-spacing:.2px}
-nav{flex:1;overflow:auto}
-nav .nav-btn{width:100%;text-align:left;background:transparent;border:none;color:var(--muted);
-  padding:14px 18px;cursor:pointer;font-size:15px;border-bottom:1px solid transparent;display:flex;justify-content:space-between;gap:8px}
-nav .nav-btn:hover{background:#0f1d2c;color:var(--ink)}
-nav .nav-btn.active{background:#12243a;border-bottom:1px solid var(--line);color:var(--ink)}
-.side-foot{border-top:1px solid var(--line);padding:12px 18px;color:var(--muted);font-size:12px}
-
-main{overflow:auto;padding:22px}
-h1{margin:0 0 6px 0;font-size:22px}
-.small{color:var(--muted);font-size:13px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 18px 0}
-.row{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.grid-2{display:grid;gap:16px;grid-template-columns:1fr 1fr}
-.grid-3{display:grid;gap:16px;grid-template-columns:repeat(3,1fr)}
-@media (max-width:1000px){ .grid-2,.grid-3{grid-template-columns:1fr} }
-
-a{color:#8ecae6;text-decoration:none} a:hover{text-decoration:underline}
-table{width:100%;border-collapse:collapse;margin-top:8px}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px;text-align:left}
-.kpi{display:flex;gap:10px;align-items:center}
-.kpi .pill{padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
-button,select{background:#0a131e;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
-.actions{display:flex;gap:10px;flex-wrap:wrap}
-button.primary{background:var(--brand);border:none;color:#fff;font-weight:600;cursor:pointer}
-button.secondary{background:#172434;border:1px solid #223349;color:#e6eef7;cursor:pointer}
-button.primary:hover{filter:brightness(1.08)}
-.badge{padding:2px 8px;border-radius:999px;font-size:12px;color:#000}
-.badge.ok{background:var(--ok)} .badge.warn{background:var(--warn)} .badge.bad{background:var(--bad)}
-.canvas-wrap{min-height:340px}
-hr.thin{border:none;border-top:1px solid var(--line);margin:10px 0}
-
-/* Print styles */
-@media print{
-  .app{grid-template-columns:1fr}
-  aside, .actions{display:none !important}
-  body{background:#fff;color:#000}
-  .card{border:1px solid #ddd;background:#fff}
-  a{color:#004aad}
-  canvas{page-break-inside:avoid}
-  .report-title{margin-top:0}
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skunkworks LearnSync Dashboard</title>
+  <meta name="description" content="Unified learning and certification analytics dashboard for Microsoft Learn, Credly, GitHub, and LinkedIn." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/dist/date-fns.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
+
 <body>
-<div class="app" id="appRoot">
+  <div class="app" id="appRoot">
+    
+    <!-- Sidebar -->
+    <aside>
+      <div class="brand" id="menuToggle">Skunkworks LearnSync</div>
+      <nav id="sidebarNav">
+        <button class="nav-btn active" data-id="hamzah">
+          <span>Hamzah Mahomed</span><span>›</span>
+        </button>
+        <button class="nav-btn" data-id="khutjo">
+          <span>Khutjo Satekge</span><span>›</span>
+        </button>
+        <button class="nav-btn" data-id="nokuthula">
+          <span>Nokuthula Mangweni</span><span>›</span>
+        </button>
+      </nav>
+      <div class="side-foot">© 2025 Skunkworks Africa</div>
+    </aside>
 
-  <!-- Sidebar -->
-  <aside>
-    <div class="brand">Skunkworks LearnSync</div>
-    <nav id="sidebarNav">
-      <button class="nav-btn active" data-id="hamzah"><span>Hamzah Mahomed</span><span>›</span></button>
-      <button class="nav-btn" data-id="khutjo"><span>Khutjo Satekge</span><span>›</span></button>
-      <button class="nav-btn" data-id="nokuthula"><span>Nokuthula Mangweni</span><span>›</span></button>
-    </nav>
-    <div class="side-foot">© 2025 Skunkworks Africa</div>
-  </aside>
+    <!-- Main Content -->
+    <main id="main">
+      <header class="row" style="align-items:center">
+        <div>
+          <h1 id="name" class="report-title">Hamzah Mahomed</h1>
+          <div class="small">
+            Unified overview — Microsoft Learn • Credly • GitHub • LinkedIn
+          </div>
+        </div>
+        <div class="actions">
+          <select id="windowSel" title="Analysis window">
+            <option value="30">Last 30 days</option>
+            <option value="90" selected>Last 90 days</option>
+            <option value="180">Last 180 days</option>
+            <option value="365">Last 365 days</option>
+            <option value="all">All time</option>
+          </select>
+          <button class="secondary" id="refreshBtn" title="Reload data">Reload</button>
+          <button class="primary" id="printCurrent">Print Current</button>
+          <button class="primary" id="printAll">Print All</button>
+        </div>
+      </header>
 
-  <!-- Main -->
-  <main id="main">
-    <header class="row" style="align-items:center">
-      <div>
-        <h1 id="name" class="report-title">Hamzah Mahomed</h1>
-        <div class="small">Unified view: Microsoft Learn • Credly • GitHub • LinkedIn</div>
-      </div>
-      <div class="actions" style="justify-content:flex-end">
-        <select id="windowSel" title="Analysis window">
-          <option value="30">Last 30 days</option>
-          <option value="90" selected>Last 90 days</option>
-          <option value="180">Last 180 days</option>
-          <option value="365">Last 365 days</option>
-          <option value="all">All available</option>
-        </select>
-        <button class="secondary" id="refreshBtn" title="Reload with live data">Reload</button>
-        <button class="primary" id="printCurrent">Print Current</button>
-        <button class="primary" id="printAll">Print All</button>
-      </div>
-    </header>
+      <!-- Profile Links -->
+      <section id="links" class="card"></section>
 
-    <!-- Profile Links + KPIs -->
-    <section id="links" class="card"></section>
-    <section id="summary" class="card"></section>
+      <!-- KPI Summary -->
+      <section id="summary" class="card"></section>
 
-    <!-- Charts -->
-    <section class="card">
-      <div class="grid-2">
-        <div class="canvas-wrap"><canvas id="timeline"></canvas></div>
-        <div class="canvas-wrap"><canvas id="issuers"></canvas></div>
-      </div>
-      <div class="grid-2" style="margin-top:16px">
-        <div class="canvas-wrap"><canvas id="ghTypes"></canvas></div>
-        <div class="canvas-wrap"><canvas id="ghDaily"></canvas></div>
-      </div>
-    </section>
+      <!-- Charts -->
+      <section class="card">
+        <div class="grid-2">
+          <div class="canvas-wrap"><canvas id="timeline"></canvas></div>
+          <div class="canvas-wrap"><canvas id="issuers"></canvas></div>
+        </div>
+        <div class="grid-2" style="margin-top:16px">
+          <div class="canvas-wrap"><canvas id="ghTypes"></canvas></div>
+          <div class="canvas-wrap"><canvas id="ghDaily"></canvas></div>
+        </div>
+      </section>
 
-    <!-- LinkedIn Rating (selection-based, no inputs) -->
-    <section id="linkedinCard" class="card"></section>
+      <!-- LinkedIn Profile Ratings -->
+      <section id="linkedinCard" class="card"></section>
 
-    <!-- Evaluation Rubric -->
-    <section id="rubric" class="card"></section>
-  </main>
-</div>
+      <!-- Evaluation Framework -->
+      <section id="rubric" class="card"></section>
+    </main>
+  </div>
 
-<script>
-/* ===================== CONFIG ===================== */
-const PROFILES = {
-  hamzah: {
-    display: "Hamzah Mahomed",
-    learnUrl:  "https://learn.microsoft.com/en-us/users/hamzah-mahomed/",
-    credlyUrl: "https://www.credly.com/users/hamzah-mahomet/badges",
-    githubUrl: "https://github.com/HMahomed",
-    linkedinUrl: "https://www.linkedin.com/in/hamzah-m/",
-    learnUser: "hamzah-mahomed",
-    credlyUser: "hamzah-mahomet",
-    githubUser: "HMahomed",
-    // LinkedIn pre-scored (selection-based)
-    linkedin: { score: 78, label: "Strong", breakdown: {
-      photo: "Yes", banner: "Yes", headline: "Clear value-led", summary: "Good depth",
-      experience: "Detailed", education: "Listed", skills: "12 skills / few endorsements",
-      connections: "250–499", activity: "Occasional posts", url: "Custom", completeness: "High"
-    }}
-  },
-  khutjo: {
-    display: "Khutjo Satekge",
-    learnUrl:  "https://learn.microsoft.com/en-us/users/Khutjo-Satekge/",
-    credlyUrl: "https://www.credly.com/users/khutjo-satekge/badges",
-    githubUrl: "https://github.com/satekge-khutjo",
-    linkedinUrl: "https://www.linkedin.com/in/khutjo-satekge-06b174152/",
-    learnUser: "Khutjo-Satekge",
-    credlyUser: "khutjo-satekge",
-    githubUser: "satekge-khutjo",
-    linkedin: { score: 72, label: "Developing", breakdown: {
-      photo: "Yes", banner: "No", headline: "Needs keyword focus", summary: "Short",
-      experience: "Basic", education: "Listed", skills: "8 skills", connections: "100–249",
-      activity: "Low", url: "Default", completeness: "Medium"
-    }}
-  },
-  nokuthula: {
-    display: "Nokuthula Mangweni",
-    learnUrl:  "https://learn.microsoft.com/en-us/users/nokuthulamangweni/",
-    credlyUrl: "https://www.credly.com/users/nokuthula-mangweni/badges",
-    githubUrl: "https://github.com/mangweninokuthula7-cmyk",
-    linkedinUrl: "https://www.linkedin.com/in/nokuthula-mangweni/",
-    learnUser: "nokuthulamangweni",
-    credlyUser: "nokuthula-mangweni",
-    githubUser: "mangweninokuthula7-cmyk",
-    linkedin: { score: 64, label: "Developing", breakdown: {
-      photo: "Yes", banner: "Yes", headline: "Okay", summary: "Concise",
-      experience: "Basic", education: "Listed", skills: "9 skills", connections: "50–99",
-      activity: "Low", url: "Default", completeness: "Medium"
-    }}
-  }
-};
-
-// Fallback demo data (used if live APIs not available or return empty)
-const FALLBACK = {
-  hamzah: {
-    credly: [
-      {title:"IBM Cloud Essentials", issuer:"IBM", date:"2024-11-12"},
-      {title:"Azure Fundamentals", issuer:"Microsoft", date:"2025-02-10"}
-    ],
-    learn: [
-      {title:"Intro to Azure AI", issuer:"Microsoft", date:"2025-01-05"},
-      {title:"Manage Azure Resources", issuer:"Microsoft", date:"2025-03-18"},
-      {title:"Design Secure Apps", issuer:"Microsoft", date:"2025-05-21"}
-    ],
-    ghEvents: [
-      {created_at:"2025-08-10T10:10:00Z", type:"PushEvent"},
-      {created_at:"2025-08-18T12:22:00Z", type:"IssuesEvent"},
-      {created_at:"2025-09-02T08:00:00Z", type:"PullRequestEvent"},
-      {created_at:"2025-10-05T14:40:00Z", type:"PushEvent"}
-    ]
-  },
-  khutjo: {
-    credly: [
-      {title:"Google Cloud Digital Leader", issuer:"Google", date:"2024-12-02"},
-      {title:"Azure AI Fundamentals", issuer:"Microsoft", date:"2025-04-29"}
-    ],
-    learn: [
-      {title:"Python for Beginners", issuer:"Microsoft", date:"2025-02-17"},
-      {title:"Build Web APIs", issuer:"Microsoft", date:"2025-06-03"}
-    ],
-    ghEvents: [
-      {created_at:"2025-07-28T09:30:00Z", type:"CreateEvent"},
-      {created_at:"2025-08-14T18:12:00Z", type:"PushEvent"},
-      {created_at:"2025-09-19T11:03:00Z", type:"WatchEvent"}
-    ]
-  },
-  nokuthula: {
-    credly: [
-      {title:"Scrum Fundamentals", issuer:"ScrumStudy", date:"2025-01-23"}
-    ],
-    learn: [
-      {title:"Intro to GitHub", issuer:"Microsoft", date:"2025-03-11"},
-      {title:"Version Control Basics", issuer:"Microsoft", date:"2025-07-08"}
-    ],
-    ghEvents: [
-      {created_at:"2025-06-06T10:10:00Z", type:"PushEvent"},
-      {created_at:"2025-09-16T16:21:00Z", type:"IssuesEvent"}
-    ]
-  }
-};
-
-/* ===================== UTIL ===================== */
-const $ = (sel) => document.querySelector(sel);
-const fmt = (n) => n.toLocaleString();
-function withinWindow(dateStr, win){
-  if(win==="all") return true;
-  const ms = Number(win)*24*3600*1000;
-  return (Date.now() - new Date(dateStr).getTime()) <= ms;
-}
-function colorVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name); }
-
-/* ===================== FETCHERS (Live with Fallback) ===================== */
-// Credly (public)
-async function fetchCredly(user, key){
-  try{
-    const r = await fetch(`https://www.credly.com/api/v1/users/${encodeURIComponent(user)}/badges`);
-    if(!r.ok) throw new Error("Credly not ok");
-    const j = await r.json();
-    const arr = (j.data||[]).map(b => ({
-      title:  b.attributes?.name,
-      issuer: b.attributes?.issuer?.name || "Unknown",
-      date:   b.attributes?.issued_at
-    })).filter(x=>x.date);
-    return arr.length ? arr : FALLBACK[key].credly;
-  }catch{ return FALLBACK[key].credly; }
-}
-
-// Microsoft Learn (public profile JSON)
-async function fetchLearn(user, key){
-  try{
-    const r = await fetch(`https://learn.microsoft.com/api/learn/users/${encodeURIComponent(user)}`);
-    if(!r.ok) throw new Error("Learn not ok");
-    const j = await r.json();
-    const arr = (j.achievements||[]).map(a => ({
-      title:  a.title || a.name,
-      issuer: "Microsoft",
-      date:   a.completedDate || a.dateCompleted
-    })).filter(x=>x.date);
-    return arr.length ? arr : FALLBACK[key].learn;
-  }catch{ return FALLBACK[key].learn; }
-}
-
-// GitHub user public events (activity)
-async function fetchGitHub(login, key){
-  try{
-    const pages=[1,2,3]; const all=[];
-    for(const p of pages){
-      const r = await fetch(`https://api.github.com/users/${login}/events/public?per_page=100&page=${p}`);
-      if(!r.ok) break;
-      const j = await r.json(); if(!Array.isArray(j) || !j.length) break;
-      all.push(...j);
-    }
-    return all.length ? all : FALLBACK[key].ghEvents;
-  }catch{ return FALLBACK[key].ghEvents; }
-}
-
-/* ===================== RENDER ===================== */
-let chartTimeline, chartIssuers, chartGhTypes, chartGhDaily;
-function destroyCharts(){ [chartTimeline, chartIssuers, chartGhTypes, chartGhDaily].forEach(c=>{ if(c) c.destroy(); }); }
-
-function renderLinks(p){
-  $("#links").innerHTML = `
-    <div class="row">
-      <div>
-        <b>Profiles</b><br/>
-        <a target="_blank" href="${p.learnUrl}">Microsoft Learn</a> •
-        <a target="_blank" href="${p.credlyUrl}">Credly</a> •
-        <a target="_blank" href="${p.githubUrl}">GitHub</a> •
-        <a target="_blank" href="${p.linkedinUrl}">LinkedIn</a>
-      </div>
-      <div class="small">All data shown is public or fallback for demo reliability.</div>
-    </div>
-  `;
-}
-
-function renderSummary(credly, learn, gh, winLabel){
-  const total = credly.length + learn.length;
-  const stage = total<5 ? "Explorer" : total<15 ? "Builder" : "Integrator";
-  $("#summary").innerHTML = `
-    <div class="grid-3">
-      <div>
-        <div class="kpi"><span class="pill">Credly</span><h3 style="margin:6px 0 0">${fmt(credly.length)}</h3></div>
-        <div class="small">Total certifications/badges</div>
-      </div>
-      <div>
-        <div class="kpi"><span class="pill">Microsoft Learn</span><h3 style="margin:6px 0 0">${fmt(learn.length)}</h3></div>
-        <div class="small">Achievements</div>
-      </div>
-      <div>
-        <div class="kpi"><span class="pill">GitHub</span><h3 style="margin:6px 0 0">${fmt(gh.length)}</h3></div>
-        <div class="small">Public events (${winLabel})</div>
-      </div>
-    </div>
-    <hr class="thin"/>
-    <div>Progress Stage: <span class="badge ${stage==='Explorer'?'warn':'ok'}">${stage}</span></div>
-  `;
-}
-
-function drawCharts(credly, learn, gh){
-  destroyCharts();
-
-  // TIMELINE (cumulative)
-  const merged = [
-    ...credly.map(x=>({x:new Date(x.date), y:1})),
-    ...learn.map(x=>({x:new Date(x.date), y:1}))
-  ].sort((a,b)=>a.x-b.x);
-  let cum=[]; let c=0; for(const m of merged){ c++; cum.push({x:m.x,y:c}); }
-
-  chartTimeline = new Chart($("#timeline"), {
-    type:"line",
-    data:{ datasets:[{
-      label:"Cumulative achievements (Learn + Credly)",
-      data:cum, borderColor: colorVar("--brand"),
-      backgroundColor:"rgba(19,101,244,0.25)", fill:true, pointRadius:0
-    }]},
-    options:{
-      parsing:false,
-      scales:{ x:{ type:"time", time:{unit:"month"}, ticks:{color:colorVar("--muted")} },
-               y:{ ticks:{color:colorVar("--muted")} } },
-      plugins:{ legend:{labels:{color:colorVar("--ink")}} }
-    }
-  });
-
-  // ISSUER PIE
-  const issuers={};
-  credly.forEach(i=>issuers[i.issuer]=(issuers[i.issuer]||0)+1);
-  learn.forEach(i=>issuers[i.issuer]=(issuers[i.issuer]||0)+1);
-  chartIssuers = new Chart($("#issuers"), {
-    type:"doughnut",
-    data:{ labels:Object.keys(issuers),
-           datasets:[{ data:Object.values(issuers),
-             backgroundColor:["#2a9d8f","#e76f51","#8ecae6","#f4a261","#457b9d","#264653"] }] },
-    options:{ plugins:{ legend:{labels:{color:colorVar("--ink")}} } }
-  });
-
-  // GITHUB TYPE BAR
-  const typeCount = {};
-  gh.forEach(e=>typeCount[e.type]=(typeCount[e.type]||0)+1);
-  chartGhTypes = new Chart($("#ghTypes"),{
-    type:"bar",
-    data:{ labels:Object.keys(typeCount),
-      datasets:[{ label:"GitHub events by type", data:Object.values(typeCount),
-                  backgroundColor:colorVar("--brand") }] },
-    options:{ plugins:{legend:{labels:{color:colorVar("--ink")}}},
-              scales:{x:{ticks:{color:colorVar("--muted")}},y:{ticks:{color:colorVar("--muted")}}} }
-  });
-
-  // GITHUB DAILY LINE
-  const byDay={};
-  gh.forEach(e=>{ const d = e.created_at.split("T")[0]; byDay[d]=(byDay[d]||0)+1; });
-  const days = Object.keys(byDay).sort();
-  chartGhDaily = new Chart($("#ghDaily"),{
-    type:"line",
-    data:{ labels:days, datasets:[{ label:"Daily GitHub activity", data:days.map(d=>byDay[d]),
-                                    borderColor:colorVar("--brand-2"),
-                                    fill:false, pointRadius:0 }] },
-    options:{ plugins:{legend:{labels:{color:colorVar("--ink")}}},
-              scales:{x:{ticks:{color:colorVar("--muted")}},y:{ticks:{color:colorVar("--muted")}}} }
-  });
-}
-
-function colorVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name); }
-
-function renderLinkedInCard(p){
-  const li = p.linkedin;
-  const rows = Object.entries(li.breakdown).map(([k,v])=>{
-    const label = k[0].toUpperCase()+k.slice(1);
-    return `<tr><td>${label}</td><td>${v}</td></tr>`;
-  }).join("");
-  const badgeClass = li.label==="Outstanding"||li.label==="Strong" ? "ok"
-                   : li.label==="Developing" ? "warn" : "bad";
-  $("#linkedinCard").innerHTML = `
-    <h3>LinkedIn Profile Rating</h3>
-    <div class="kpi" style="margin-bottom:8px">
-      <span class="pill"><a href="${p.linkedinUrl}" target="_blank">Open LinkedIn</a></span>
-      <span class="badge ${badgeClass}">${li.score}/100 — ${li.label}</span>
-    </div>
-    <table>
-      <tr><th>Aspect</th><th>Assessment</th></tr>
-      ${rows}
-    </table>
-  `;
-}
-
-function renderRubric(){
-  $("#rubric").innerHTML = `
-    <h3>Evaluation Framework</h3>
-    <table>
-      <tr><th>Domain</th><th>Description</th><th>Weight</th></tr>
-      <tr><td>Technical Skills</td><td>Coding, APIs, cloud, version control</td><td>25 %</td></tr>
-      <tr><td>Project Execution</td><td>Agile delivery, docs, ownership</td><td>25 %</td></tr>
-      <tr><td>Collaboration & Comms</td><td>Peer interaction, stakeholder updates</td><td>20 %</td></tr>
-      <tr><td>Security & Compliance</td><td>Secure code & data handling</td><td>15 %</td></tr>
-      <tr><td>Business Context</td><td>Alignment to product goals & users</td><td>15 %</td></tr>
-    </table>
-  `;
-}
-
-/* ===================== LOAD A PROFILE ===================== */
-async function loadProfile(key){
-  const p = PROFILES[key];
-  $("#name").textContent = p.display;
-  // highlight
-  document.querySelectorAll("#sidebarNav .nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.id===key));
-  renderLinks(p);
-
-  const win = ($("#windowSel")?.value)||"90";
-
-  // Live fetch with fallback
-  const [credlyAll, learnAll, ghAll] = await Promise.all([
-    fetchCredly(p.credlyUser, key),
-    fetchLearn(p.learnUser, key),
-    fetchGitHub(p.githubUser, key)
-  ]);
-
-  // Filter by window
-  const fCredly = credlyAll.filter(x=>withinWindow(x.date,win));
-  const fLearn  = learnAll.filter(x=>withinWindow(x.date,win));
-  const fGh     = ghAll.filter(x=>withinWindow(eDate(x=ghAll, d=>d.created_at), win)); // shim
-  // The above line is too clever for some engines—rewrite simply:
-  const fGh2 = ghAll.filter(x=>withinWindow(x.created_at, win));
-
-  renderSummary(fCredly, fLearn, fGh2, win==="all"?"all time":`last ${win} days`);
-  drawCharts(fCredly, fLearn, fGh2);
-  renderLinkedInCard(p);
-  renderRubric();
-
-  // refresh hook
-  $("#refreshBtn").onclick = () => loadProfile(key);
-}
-
-/* ===================== PRINT MODES ===================== */
-function printCurrent(){
-  window.print();
-}
-async function printAll(){
-  const mainEl = $("#main");
-  const original = mainEl.innerHTML;
-
-  let html = "";
-  for(const key of Object.keys(PROFILES)){
-    await loadProfile(key); // renders into DOM
-    html += `<div class="print-block">${mainEl.innerHTML}</div><hr class="thin" />`;
-  }
-  mainEl.innerHTML = html;
-  window.print();
-  // restore current (default back to Hamzah)
-  mainEl.innerHTML = original;
-  await loadProfile(getActiveKey());
-}
-
-function getActiveKey(){
-  const btn = document.querySelector("#sidebarNav .nav-btn.active");
-  return btn ? btn.dataset.id : "hamzah";
-}
-
-/* ===================== EVENT BINDING ===================== */
-// Delegated sidebar binding (works reliably on all buttons)
-document.getElementById("sidebarNav").addEventListener("click",(e)=>{
-  const btn = e.target.closest(".nav-btn");
-  if(!btn) return;
-  loadProfile(btn.dataset.id);
-});
-
-document.getElementById("printCurrent").addEventListener("click", printCurrent);
-document.getElementById("printAll").addEventListener("click", printAll);
-
-/* ===================== INIT ===================== */
-loadProfile("hamzah");
-</script>
+  <!-- Core Script -->
+  <script type="module" src="scripts.js"></script>
 </body>
 </html>
