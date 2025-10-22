@@ -1,0 +1,26 @@
+{
+  "hamzah": {
+    "display": "Hamzah Mahomed",
+    "learnUser": "hamzah-mahomed",
+    "credlyUser": "hamzah-mahomet",
+    "githubUser": "HMahomed",
+    "linkedinScore": 78,
+    "linkedinLabel": "Strong"
+  },
+  "khutjo": {
+    "display": "Khutjo Satekge",
+    "learnUser": "Khutjo-Satekge",
+    "credlyUser": "khutjo-satekge",
+    "githubUser": "satekge-khutjo",
+    "linkedinScore": 72,
+    "linkedinLabel": "Developing"
+  },
+  "nokuthula": {
+    "display": "Nokuthula Mangweni",
+    "learnUser": "nokuthulamangweni",
+    "credlyUser": "nokuthula-mangweni",
+    "githubUser": "mangweninokuthula7-cmyk",
+    "linkedinScore": 64,
+    "linkedinLabel": "Developing"
+  }
+}
