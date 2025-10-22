@@ -2,155 +2,134 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>Skunkworks Learning Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Skunkworks LearnSync Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  body { background:#0a0f14; color:#e6eef5; font-family:Inter,Arial,sans-serif; margin:0; }
+  body { background:#0a0f14; color:#e5eef5; font-family:Inter,Arial,sans-serif; margin:0; }
   header { background:#0d1b26; padding:20px; border-bottom:1px solid #14212e; }
-  h1 { font-size:22px; margin:0; }
-  main { max-width:1200px; margin:auto; padding:20px; }
+  h1 { margin:0; font-size:22px; }
+  main { padding:20px; max-width:1200px; margin:auto; }
   .card { background:#0d1b26; border:1px solid #14212e; border-radius:10px; padding:20px; margin-bottom:24px; }
-  input { width:80%; padding:8px; border-radius:6px; background:#0a0f14; color:#e5eef5; border:1px solid #14212e; }
-  button { background:#1365f4; border:none; padding:10px 18px; color:white; border-radius:6px; cursor:pointer; }
+  select, button { background:#0a0f14; color:#e5eef5; border:1px solid #14212e; border-radius:8px; padding:8px 12px; }
+  button { background:#1365f4; border:none; cursor:pointer; font-weight:600; }
   button:hover { background:#1a7bff; }
   .charts { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  .small { color:#8ba0b8; font-size:13px; }
-  table { width:100%; border-collapse:collapse; color:#e5eef5; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
   th,td { border-bottom:1px solid #14212e; padding:8px 10px; font-size:14px; text-align:left; }
+  .profile-links a { color:#8ecae6; text-decoration:none; margin-right:15px; }
+  .small { color:#8ba0b8; font-size:13px; }
 </style>
 </head>
 <body>
-<header><h1>Team Skunkworks – Learning Path & Certification Progress</h1></header>
+<header><h1>Skunkworks LearnSync Dashboard</h1></header>
 <main>
   <div class="card">
-    <p>Enter Microsoft Learn or Credly usernames (comma-separated). This dashboard aggregates achievements from both ecosystems.</p>
-    <input id="users" placeholder="hamzah-mahomed, khutjo-satekge, nokuthulamangweni"/>
-    <button id="analyze">Analyze Progress</button>
-    <p class="small">Data is fetched from public APIs; private learning paths won’t appear.</p>
+    <label for="intern">Select Intern:</label>
+    <select id="intern">
+      <option value="hamzah-mahomed">Hamzah Mohamed</option>
+      <option value="khutjo-satekge">Khutjo Satekge</option>
+      <option value="nokuthulamangweni">Nokuthula Mangweni</option>
+    </select>
+    <button id="load">Load Progress</button>
+    <p class="small">Displays Microsoft Learn and Credly progress for the selected intern.</p>
   </div>
-  <div id="results"></div>
+  <div id="profile"></div>
+  <div id="metrics"></div>
+  <div id="charts"></div>
 </main>
 
 <script>
-const results = document.getElementById("results");
+const profiles={
+  "hamzah-mahomed":{
+    learn:"https://learn.microsoft.com/en-us/users/hamzah-mahomed/",
+    credly:"https://www.credly.com/users/hamzah-mahomet/badges"
+  },
+  "khutjo-satekge":{
+    learn:"https://learn.microsoft.com/en-us/users/Khutjo-Satekge/",
+    credly:"https://www.credly.com/users/khutjo-satekge/badges"
+  },
+  "nokuthulamangweni":{
+    learn:"https://learn.microsoft.com/en-us/users/nokuthulamangweni/",
+    credly:"https://www.credly.com/users/nokuthula-mangweni/badges"
+  }
+};
 
-// --- Fetch Credly badges ---
-async function getCredlyData(user){
-  try {
-    const r = await fetch(`https://www.credly.com/api/v1/users/${user}/badges`);
-    if(!r.ok) return [];
-    const j = await r.json();
-    return j.data.map(b=>({
-      source:"Credly",
-      name:b.attributes.name,
-      date:b.attributes.issued_at,
-      issuer:b.attributes.issuer.name
-    }));
-  } catch(e){ console.error("Credly error",e); return []; }
+async function fetchCredly(username){
+  const resp=await fetch(`https://www.credly.com/api/v1/users/${username}/badges`);
+  if(!resp.ok) return [];
+  const json=await resp.json();
+  return json.data.map(b=>({
+    name:b.attributes.name,
+    date:b.attributes.issued_at,
+    issuer:b.attributes.issuer.name
+  }));
 }
 
-// --- Fetch Microsoft Learn public achievements ---
-async function getLearnData(user){
-  try {
-    const r = await fetch(`https://learn.microsoft.com/api/learn/users/${user}`);
-    if(!r.ok) return [];
-    const j = await r.json();
-    if(!j || !j.achievements) return [];
-    return j.achievements.map(a=>({
-      source:"MS Learn",
-      name:a.title || a.name,
-      date:a.completedDate || a.dateCompleted,
-      issuer:"Microsoft"
-    }));
-  } catch(e){ console.error("Learn error",e); return []; }
+async function fetchLearn(username){
+  const resp=await fetch(`https://learn.microsoft.com/api/learn/users/${username}`);
+  if(!resp.ok) return [];
+  const json=await resp.json();
+  if(!json.achievements) return [];
+  return json.achievements.map(a=>({
+    name:a.title || a.name,
+    date:a.completedDate,
+    issuer:"Microsoft"
+  }));
 }
 
-// --- Render combined charts ---
-function renderDashboard(user, combined){
-  const card = document.createElement("div");
-  card.className = "card";
-  const badges = combined.filter(d=>d.source==="Credly");
-  const learns = combined.filter(d=>d.source==="MS Learn");
+document.getElementById("load").onclick=async()=>{
+  const user=document.getElementById("intern").value;
+  const info=profiles[user];
+  document.getElementById("profile").innerHTML=
+    `<div class='card'><h2>${user.replace(/-/g,' ')}</h2>
+      <div class='profile-links'>
+        <a href='${info.learn}' target='_blank'>Microsoft Learn Profile</a>
+        <a href='${info.credly}' target='_blank'>Credly Profile</a>
+      </div></div>`;
+  
+  const [credly,learn]=await Promise.all([fetchCredly(user),fetchLearn(user)]);
+  const total=credly.length+learn.length;
+  const skillIndex=(credly.length*1.2 + learn.length)/2; // illustrative
+  const progressStage=total<5?"Explorer":total<15?"Builder":"Integrator";
 
-  // Sort chronologically
-  const all = [...combined].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const timeline = all.map(d=>({x:new Date(d.date),y:1,src:d.source}));
-
-  // Cumulative counts
-  const cumulative=[];
-  let count=0;
-  for(const t of timeline){count++; cumulative.push({x:t.x,y:count});}
-
-  // Issuer distribution
-  const issuers={};
-  all.forEach(a=>issuers[a.issuer]=(issuers[a.issuer]||0)+1);
-
-  card.innerHTML=`
-    <h2>${user}</h2>
-    <p>${badges.length} badges | ${learns.length} Microsoft Learn achievements | ${all.length} total activities</p>
-    <div class="charts">
-      <canvas id="timeline-${user}"></canvas>
-      <canvas id="issuers-${user}"></canvas>
+  document.getElementById("metrics").innerHTML=`
+    <div class='card'>
+      <h3>Performance Summary</h3>
+      <table>
+        <tr><th>Metric</th><th>Score / Count</th></tr>
+        <tr><td>Total Badges</td><td>${credly.length}</td></tr>
+        <tr><td>Learn Modules Completed</td><td>${learn.length}</td></tr>
+        <tr><td>Skill Mastery Index</td><td>${skillIndex.toFixed(2)}</td></tr>
+        <tr><td>Progress Stage</td><td>${progressStage}</td></tr>
+      </table>
     </div>
   `;
-  results.appendChild(card);
 
-  // Timeline chart
-  new Chart(document.getElementById(`timeline-${user}`),{
-    type:"line",
-    data:{datasets:[{
-      label:"Cumulative Achievements",
-      data:cumulative,
-      borderColor:"#1a7bff",
-      backgroundColor:"rgba(26,123,255,0.2)",
-      fill:true,
-      parsing:false
-    }]},
+  const ctx1=document.createElement("canvas");
+  const ctx2=document.createElement("canvas");
+  document.getElementById("charts").innerHTML="<div class='card charts'></div>";
+  document.querySelector(".charts").append(ctx1,ctx2);
+
+  const all=[...credly.map(i=>({x:new Date(i.date),y:1})),
+             ...learn.map(i=>({x:new Date(i.date),y:1}))].sort((a,b)=>a.x-b.x);
+  let cumulative=[];let c=0;for(const a of all){c++;cumulative.push({x:a.x,y:c});}
+
+  new Chart(ctx1,{type:"line",
+    data:{datasets:[{label:"Cumulative Achievements",data:cumulative,
+      borderColor:"#1a7bff",backgroundColor:"rgba(26,123,255,0.3)",fill:true}]},
     options:{scales:{x:{type:"time",time:{unit:"month"},ticks:{color:"#8ba0b8"}},
-                    y:{ticks:{color:"#8ba0b8"}}},
-             plugins:{legend:{labels:{color:"#e5eef5"}}}}
-  });
+      y:{ticks:{color:"#8ba0b8"}}},plugins:{legend:{labels:{color:"#e5eef5"}}}}});
 
-  // Issuer mix
-  new Chart(document.getElementById(`issuers-${user}`),{
-    type:"doughnut",
+  const issuers={};
+  credly.forEach(i=>issuers[i.issuer]=(issuers[i.issuer]||0)+1);
+  learn.forEach(i=>issuers[i.issuer]=(issuers[i.issuer]||0)+1);
+
+  new Chart(ctx2,{type:"pie",
     data:{labels:Object.keys(issuers),
-          datasets:[{data:Object.values(issuers),
-          backgroundColor:["#2a9d8f","#e76f51","#f4a261","#8ecae6","#457b9d"]}]},
-    options:{plugins:{legend:{labels:{color:"#e5eef5"}}}}
-  });
-}
-
-// --- Leaderboard aggregation ---
-function renderLeaderboard(data){
-  const container=document.createElement("div");
-  container.className="card";
-  const leaderboard={};
-  for(const [user,records] of Object.entries(data))
-    leaderboard[user]=records.length;
-  const sorted=Object.entries(leaderboard).sort((a,b)=>b[1]-a[1]);
-  let html="<h2>Leaderboard</h2><table><tr><th>User</th><th>Total Achievements</th></tr>";
-  sorted.forEach(([u,v])=>html+=`<tr><td>${u}</td><td>${v}</td></tr>`);
-  html+="</table>";
-  container.innerHTML=html;
-  results.prepend(container);
-}
-
-// --- Main handler ---
-document.getElementById("analyze").onclick=async()=>{
-  results.innerHTML="<p class='small'>Loading progress data ...</p>";
-  const users=document.getElementById("users").value.split(",").map(u=>u.trim()).filter(Boolean);
-  results.innerHTML="";
-  const allData={};
-  for(const u of users){
-    const credly=await getCredlyData(u);
-    const learn=await getLearnData(u);
-    const combined=[...credly,...learn].filter(d=>d.date);
-    allData[u]=combined;
-    renderDashboard(u,combined);
-  }
-  renderLeaderboard(allData);
+      datasets:[{data:Object.values(issuers),
+      backgroundColor:["#2a9d8f","#e76f51","#8ecae6","#f4a261"]}]},
+    options:{plugins:{legend:{labels:{color:"#e5eef5"}}}}});
 };
 </script>
 </body>
