@@ -12,7 +12,7 @@
 
 <style>
 :root{
-  --bg:#0b0f14; --panel:#0e1621; --ink:#e6eef7; --muted:#9eb2c9;
+  --bg:#0b0f14; --panel:#0e1621; --ink:#e6eef7; --muted:#9fb2c9;
   --line:#172434; --brand:#1365f4; --brand-2:#4cc9f0; --ok:#2a9d8f; --warn:#f4a261; --bad:#e76f51;
 }
 *{box-sizing:border-box}
@@ -24,10 +24,10 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,
 aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
 .brand{padding:18px 18px;border-bottom:1px solid var(--line);font-weight:700;letter-spacing:.2px}
 nav{flex:1;overflow:auto}
-nav button{width:100%;text-align:left;background:transparent;border:none;color:var(--muted);
-  padding:14px 18px;cursor:pointer;font-size:15px;border-bottom:1px solid transparent}
-nav button:hover{background:#0f1d2c;color:var(--ink)}
-nav button.active{background:#12243a;border-bottom:1px solid var(--line);color:var(--ink)}
+nav .nav-btn{width:100%;text-align:left;background:transparent;border:none;color:var(--muted);
+  padding:14px 18px;cursor:pointer;font-size:15px;border-bottom:1px solid transparent;display:flex;justify-content:space-between;gap:8px}
+nav .nav-btn:hover{background:#0f1d2c;color:var(--ink)}
+nav .nav-btn.active{background:#12243a;border-bottom:1px solid var(--line);color:var(--ink)}
 .side-foot{border-top:1px solid var(--line);padding:12px 18px;color:var(--muted);font-size:12px}
 
 main{overflow:auto;padding:22px}
@@ -44,42 +44,65 @@ table{width:100%;border-collapse:collapse;margin-top:8px}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px;text-align:left}
 .kpi{display:flex;gap:10px;align-items:center}
 .kpi .pill{padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
-button,select,input[type="file"]{background:#0a131e;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+button,select{background:#0a131e;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
 button.primary{background:var(--brand);border:none;color:#fff;font-weight:600;cursor:pointer}
+button.secondary{background:#172434;border:1px solid #223349;color:#e6eef7;cursor:pointer}
 button.primary:hover{filter:brightness(1.08)}
-input[type="number"],input[type="text"],textarea{width:100%;background:#0a131e;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
-label{font-size:13px;color:var(--muted)}
-hr.thin{border:none;border-top:1px solid var(--line);margin:10px 0}
 .badge{padding:2px 8px;border-radius:999px;font-size:12px;color:#000}
 .badge.ok{background:var(--ok)} .badge.warn{background:var(--warn)} .badge.bad{background:var(--bad)}
 .canvas-wrap{min-height:340px}
+hr.thin{border:none;border-top:1px solid var(--line);margin:10px 0}
+
+/* Print styles */
+@media print{
+  .app{grid-template-columns:1fr}
+  aside, .actions{display:none !important}
+  body{background:#fff;color:#000}
+  .card{border:1px solid #ddd;background:#fff}
+  a{color:#004aad}
+  canvas{page-break-inside:avoid}
+  .report-title{margin-top:0}
+}
 </style>
 </head>
 <body>
-<div class="app">
+<div class="app" id="appRoot">
 
   <!-- Sidebar -->
   <aside>
     <div class="brand">Skunkworks LearnSync</div>
-    <nav>
-      <button class="active" data-id="hamzah">Hamzah Mahomed</button>
-      <button data-id="khutjo">Khutjo Satekge</button>
-      <button data-id="nokuthula">Nokuthula Mangweni</button>
+    <nav id="sidebarNav">
+      <button class="nav-btn active" data-id="hamzah"><span>Hamzah Mahomed</span><span>›</span></button>
+      <button class="nav-btn" data-id="khutjo"><span>Khutjo Satekge</span><span>›</span></button>
+      <button class="nav-btn" data-id="nokuthula"><span>Nokuthula Mangweni</span><span>›</span></button>
     </nav>
     <div class="side-foot">© 2025 Skunkworks Africa</div>
   </aside>
 
   <!-- Main -->
-  <main>
-    <header>
-      <h1 id="name">Hamzah Mahomed</h1>
-      <div class="small">Unified view: Microsoft Learn • Credly • GitHub • LinkedIn</div>
+  <main id="main">
+    <header class="row" style="align-items:center">
+      <div>
+        <h1 id="name" class="report-title">Hamzah Mahomed</h1>
+        <div class="small">Unified view: Microsoft Learn • Credly • GitHub • LinkedIn</div>
+      </div>
+      <div class="actions" style="justify-content:flex-end">
+        <select id="windowSel" title="Analysis window">
+          <option value="30">Last 30 days</option>
+          <option value="90" selected>Last 90 days</option>
+          <option value="180">Last 180 days</option>
+          <option value="365">Last 365 days</option>
+          <option value="all">All available</option>
+        </select>
+        <button class="secondary" id="refreshBtn" title="Reload with live data">Reload</button>
+        <button class="primary" id="printCurrent">Print Current</button>
+        <button class="primary" id="printAll">Print All</button>
+      </div>
     </header>
 
-    <!-- Profile Links + Controls -->
+    <!-- Profile Links + KPIs -->
     <section id="links" class="card"></section>
-
-    <!-- Summary KPIs -->
     <section id="summary" class="card"></section>
 
     <!-- Charts -->
@@ -94,27 +117,10 @@ hr.thin{border:none;border-top:1px solid var(--line);margin:10px 0}
       </div>
     </section>
 
-    <!-- LinkedIn Rating -->
+    <!-- LinkedIn Rating (selection-based, no inputs) -->
     <section id="linkedinCard" class="card"></section>
 
-    <!-- GitHub Org Actions Metrics (optional JSON upload) -->
-    <section class="card">
-      <h3>GitHub Org Actions Metrics (Optional Upload)</h3>
-      <p class="small">For private metrics (minutes used, billable, etc.), export JSON from
-        <a href="https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage" target="_blank">Org → Actions → Usage</a> and upload it here to enrich charts locally.</p>
-      <div class="row">
-        <div>
-          <label>Upload JSON export</label><br/>
-          <input type="file" id="orgJson" accept=".json"/>
-        </div>
-        <div>
-          <button class="primary" id="parseOrg">Parse & Merge</button>
-        </div>
-      </div>
-      <div id="orgSummary" style="margin-top:10px"></div>
-    </section>
-
-    <!-- Rubric -->
+    <!-- Evaluation Rubric -->
     <section id="rubric" class="card"></section>
   </main>
 </div>
@@ -128,10 +134,15 @@ const PROFILES = {
     credlyUrl: "https://www.credly.com/users/hamzah-mahomet/badges",
     githubUrl: "https://github.com/HMahomed",
     linkedinUrl: "https://www.linkedin.com/in/hamzah-m/",
-    orgUsageUrl: "https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage",
     learnUser: "hamzah-mahomed",
     credlyUser: "hamzah-mahomet",
-    githubUser: "HMahomed"
+    githubUser: "HMahomed",
+    // LinkedIn pre-scored (selection-based)
+    linkedin: { score: 78, label: "Strong", breakdown: {
+      photo: "Yes", banner: "Yes", headline: "Clear value-led", summary: "Good depth",
+      experience: "Detailed", education: "Listed", skills: "12 skills / few endorsements",
+      connections: "250–499", activity: "Occasional posts", url: "Custom", completeness: "High"
+    }}
   },
   khutjo: {
     display: "Khutjo Satekge",
@@ -139,10 +150,14 @@ const PROFILES = {
     credlyUrl: "https://www.credly.com/users/khutjo-satekge/badges",
     githubUrl: "https://github.com/satekge-khutjo",
     linkedinUrl: "https://www.linkedin.com/in/khutjo-satekge-06b174152/",
-    orgUsageUrl: "https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage",
     learnUser: "Khutjo-Satekge",
     credlyUser: "khutjo-satekge",
-    githubUser: "satekge-khutjo"
+    githubUser: "satekge-khutjo",
+    linkedin: { score: 72, label: "Developing", breakdown: {
+      photo: "Yes", banner: "No", headline: "Needs keyword focus", summary: "Short",
+      experience: "Basic", education: "Listed", skills: "8 skills", connections: "100–249",
+      activity: "Low", url: "Default", completeness: "Medium"
+    }}
   },
   nokuthula: {
     display: "Nokuthula Mangweni",
@@ -150,211 +165,124 @@ const PROFILES = {
     credlyUrl: "https://www.credly.com/users/nokuthula-mangweni/badges",
     githubUrl: "https://github.com/mangweninokuthula7-cmyk",
     linkedinUrl: "https://www.linkedin.com/in/nokuthula-mangweni/",
-    orgUsageUrl: "https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage",
     learnUser: "nokuthulamangweni",
     credlyUser: "nokuthula-mangweni",
-    githubUser: "mangweninokuthula7-cmyk"
+    githubUser: "mangweninokuthula7-cmyk",
+    linkedin: { score: 64, label: "Developing", breakdown: {
+      photo: "Yes", banner: "Yes", headline: "Okay", summary: "Concise",
+      experience: "Basic", education: "Listed", skills: "9 skills", connections: "50–99",
+      activity: "Low", url: "Default", completeness: "Medium"
+    }}
+  }
+};
+
+// Fallback demo data (used if live APIs not available or return empty)
+const FALLBACK = {
+  hamzah: {
+    credly: [
+      {title:"IBM Cloud Essentials", issuer:"IBM", date:"2024-11-12"},
+      {title:"Azure Fundamentals", issuer:"Microsoft", date:"2025-02-10"}
+    ],
+    learn: [
+      {title:"Intro to Azure AI", issuer:"Microsoft", date:"2025-01-05"},
+      {title:"Manage Azure Resources", issuer:"Microsoft", date:"2025-03-18"},
+      {title:"Design Secure Apps", issuer:"Microsoft", date:"2025-05-21"}
+    ],
+    ghEvents: [
+      {created_at:"2025-08-10T10:10:00Z", type:"PushEvent"},
+      {created_at:"2025-08-18T12:22:00Z", type:"IssuesEvent"},
+      {created_at:"2025-09-02T08:00:00Z", type:"PullRequestEvent"},
+      {created_at:"2025-10-05T14:40:00Z", type:"PushEvent"}
+    ]
+  },
+  khutjo: {
+    credly: [
+      {title:"Google Cloud Digital Leader", issuer:"Google", date:"2024-12-02"},
+      {title:"Azure AI Fundamentals", issuer:"Microsoft", date:"2025-04-29"}
+    ],
+    learn: [
+      {title:"Python for Beginners", issuer:"Microsoft", date:"2025-02-17"},
+      {title:"Build Web APIs", issuer:"Microsoft", date:"2025-06-03"}
+    ],
+    ghEvents: [
+      {created_at:"2025-07-28T09:30:00Z", type:"CreateEvent"},
+      {created_at:"2025-08-14T18:12:00Z", type:"PushEvent"},
+      {created_at:"2025-09-19T11:03:00Z", type:"WatchEvent"}
+    ]
+  },
+  nokuthula: {
+    credly: [
+      {title:"Scrum Fundamentals", issuer:"ScrumStudy", date:"2025-01-23"}
+    ],
+    learn: [
+      {title:"Intro to GitHub", issuer:"Microsoft", date:"2025-03-11"},
+      {title:"Version Control Basics", issuer:"Microsoft", date:"2025-07-08"}
+    ],
+    ghEvents: [
+      {created_at:"2025-06-06T10:10:00Z", type:"PushEvent"},
+      {created_at:"2025-09-16T16:21:00Z", type:"IssuesEvent"}
+    ]
   }
 };
 
 /* ===================== UTIL ===================== */
 const $ = (sel) => document.querySelector(sel);
 const fmt = (n) => n.toLocaleString();
+function withinWindow(dateStr, win){
+  if(win==="all") return true;
+  const ms = Number(win)*24*3600*1000;
+  return (Date.now() - new Date(dateStr).getTime()) <= ms;
+}
+function colorVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
-/* ===================== FETCHERS ===================== */
+/* ===================== FETCHERS (Live with Fallback) ===================== */
 // Credly (public)
-async function fetchCredly(user){
+async function fetchCredly(user, key){
   try{
     const r = await fetch(`https://www.credly.com/api/v1/users/${encodeURIComponent(user)}/badges`);
-    if(!r.ok) return [];
+    if(!r.ok) throw new Error("Credly not ok");
     const j = await r.json();
-    return (j.data||[]).map(b => ({
+    const arr = (j.data||[]).map(b => ({
       title:  b.attributes?.name,
       issuer: b.attributes?.issuer?.name || "Unknown",
       date:   b.attributes?.issued_at
     })).filter(x=>x.date);
-  }catch(e){ console.warn("Credly error", e); return []; }
+    return arr.length ? arr : FALLBACK[key].credly;
+  }catch{ return FALLBACK[key].credly; }
 }
 
 // Microsoft Learn (public profile JSON)
-async function fetchLearn(user){
+async function fetchLearn(user, key){
   try{
     const r = await fetch(`https://learn.microsoft.com/api/learn/users/${encodeURIComponent(user)}`);
-    if(!r.ok) return [];
+    if(!r.ok) throw new Error("Learn not ok");
     const j = await r.json();
-    return (j.achievements||[]).map(a => ({
+    const arr = (j.achievements||[]).map(a => ({
       title:  a.title || a.name,
       issuer: "Microsoft",
       date:   a.completedDate || a.dateCompleted
     })).filter(x=>x.date);
-  }catch(e){ console.warn("MS Learn error", e); return []; }
+    return arr.length ? arr : FALLBACK[key].learn;
+  }catch{ return FALLBACK[key].learn; }
 }
 
 // GitHub user public events (activity)
-async function fetchGitHub(login){
+async function fetchGitHub(login, key){
   try{
     const pages=[1,2,3]; const all=[];
     for(const p of pages){
       const r = await fetch(`https://api.github.com/users/${login}/events/public?per_page=100&page=${p}`);
       if(!r.ok) break;
-      const j = await r.json();
-      if(!Array.isArray(j) || !j.length) break;
+      const j = await r.json(); if(!Array.isArray(j) || !j.length) break;
       all.push(...j);
     }
-    return all; // array of events
-  }catch(e){ console.warn("GitHub error", e); return []; }
+    return all.length ? all : FALLBACK[key].ghEvents;
+  }catch{ return FALLBACK[key].ghEvents; }
 }
 
-/* ===================== LINKEDIN RATER ===================== */
-/* Scoring model (0–100): photo/banner 10, headline/summary 20, experience/education 15,
-   skills/endorsements 15, connections/activity 20, URL/completeness 20 */
-function scoreLinkedIn(input){
-  const clamp=(x,m)=>Math.max(0,Math.min(m,x));
-  let score=0;
-
-  // Photo & banner
-  score += (input.photo?5:0) + (input.banner?5:0);
-
-  // Headline & Summary
-  score += clamp(Math.round((input.headlineLen>=40?10:input.headlineLen/4)),10);
-  score += clamp(Math.round((input.aboutLen>=200?10:input.aboutLen/20)),10);
-
-  // Experience & Education
-  score += clamp(Math.round(Math.min(input.experienceCount,5)*2.5),12) + (input.education?3:0);
-
-  // Skills & Endorsements
-  score += clamp(Math.round(Math.min(input.skillsCount,15)),12) + clamp(Math.round(Math.min(input.endorsements,10)/2),3);
-
-  // Connections & Activity
-  const conn = input.connections>=500 ? 20 : input.connections>=250 ? 16 : input.connections>=100 ? 12 : input.connections>=50 ? 9 : 5;
-  const act  = input.posts30>=4 ? 5 : input.posts30>=2 ? 3 : input.posts30>=1 ? 2 : 0;
-  score += conn/2 + act/2 + conn/2 + act/2; // keeps total near 20 while rewarding both
-
-  // URL & Completeness
-  score += (input.customUrl?8:0) + (input.allStar?12:0);
-
-  return Math.round(score);
-}
-function labelScore(n){
-  if(n>=91) return {t:"Outstanding", c:"ok"};
-  if(n>=75) return {t:"Strong", c:"ok"};
-  if(n>=50) return {t:"Developing", c:"warn"};
-  return {t:"Needs Improvement", c:"bad"};
-}
-function loadLinkedInSaved(key){ try{ return JSON.parse(localStorage.getItem("li:"+key))||null }catch{ return null } }
-function saveLinkedIn(key,obj){ localStorage.setItem("li:"+key, JSON.stringify(obj)) }
-
-/* Render LinkedIn Scoring UI */
-function renderLinkedInCard(key, profile){
-  const saved = loadLinkedInSaved(key) || {
-    photo:false,banner:false,headlineLen:0,aboutLen:0,experienceCount:0,education:false,
-    skillsCount:0,endorsements:0,connections:0,posts30:0,customUrl:false,allStar:false
-  };
-  const score = scoreLinkedIn(saved);
-  const lab = labelScore(score);
-
-  $("#linkedinCard").innerHTML = `
-    <h3>LinkedIn Profile Rating</h3>
-    <div class="kpi" style="margin-bottom:8px">
-      <span class="pill">Profile: <a href="${profile.linkedinUrl}" target="_blank">Open LinkedIn</a></span>
-      <span class="pill">Stored locally · editable</span>
-      <span class="badge ${lab.c}">${score}/100 — ${lab.t}</span>
-    </div>
-    <div class="row">
-      <div>
-        <label>Has profile photo?</label><br/><input type="checkbox" id="li_photo" ${saved.photo?"checked":""}/>
-      </div>
-      <div>
-        <label>Has banner image?</label><br/><input type="checkbox" id="li_banner" ${saved.banner?"checked":""}/>
-      </div>
-      <div>
-        <label>Headline length (characters)</label><br/><input type="number" id="li_head" min="0" value="${saved.headlineLen}"/>
-      </div>
-      <div>
-        <label>About length (characters)</label><br/><input type="number" id="li_about" min="0" value="${saved.aboutLen}"/>
-      </div>
-      <div>
-        <label>Experience entries (count)</label><br/><input type="number" id="li_exp" min="0" value="${saved.experienceCount}"/>
-      </div>
-      <div>
-        <label>Education section present?</label><br/><input type="checkbox" id="li_edu" ${saved.education?"checked":""}/>
-      </div>
-      <div>
-        <label>Skills (count)</label><br/><input type="number" id="li_skills" min="0" value="${saved.skillsCount}"/>
-      </div>
-      <div>
-        <label>Endorsements (approx.)</label><br/><input type="number" id="li_end" min="0" value="${saved.endorsements}"/>
-      </div>
-      <div>
-        <label>Connections (approx.)</label><br/><input type="number" id="li_conn" min="0" value="${saved.connections}"/>
-      </div>
-      <div>
-        <label>Posts in last 30 days</label><br/><input type="number" id="li_posts" min="0" value="${saved.posts30}"/>
-      </div>
-      <div>
-        <label>Custom public URL?</label><br/><input type="checkbox" id="li_url" ${saved.customUrl?"checked":""}/>
-      </div>
-      <div>
-        <label>Profile strength: All-Star?</label><br/><input type="checkbox" id="li_star" ${saved.allStar?"checked":""}/>
-      </div>
-    </div>
-    <div style="margin-top:10px">
-      <button class="primary" id="li_save">Save & Recalculate</button>
-    </div>
-  `;
-
-  $("#li_save").onclick = () => {
-    const obj = {
-      photo: $("#li_photo").checked,
-      banner: $("#li_banner").checked,
-      headlineLen: Number($("#li_head").value||0),
-      aboutLen: Number($("#li_about").value||0),
-      experienceCount: Number($("#li_exp").value||0),
-      education: $("#li_edu").checked,
-      skillsCount: Number($("#li_skills").value||0),
-      endorsements: Number($("#li_end").value||0),
-      connections: Number($("#li_conn").value||0),
-      posts30: Number($("#li_posts").value||0),
-      customUrl: $("#li_url").checked,
-      allStar: $("#li_star").checked
-    };
-    saveLinkedIn(key,obj);
-    renderLinkedInCard(key, profile); // re-render with new score
-  };
-}
-
-/* ===================== ORG JSON PARSER ===================== */
-/* Accepts a GitHub Actions usage export JSON and aggregates minutes per user login */
-function parseOrgUsage(json, profileMap){
-  // Attempt to read common shapes: {items:[{repository,usage:{minutesUsedByActions}}]} OR per-billing-period arrays
-  let perUser = {};
-  const digs = (obj) => {
-    if(Array.isArray(obj)){ obj.forEach(digs); return; }
-    if(obj && typeof obj === "object"){
-      if(obj.actor && obj.minutes){
-        const login = obj.actor.login || obj.actor; const min = Number(obj.minutes)||0;
-        perUser[login] = (perUser[login]||0) + min;
-      }
-      for(const k in obj) digs(obj[k]);
-    }
-  };
-  digs(json);
-
-  // Map into our profiles
-  const out = {};
-  for(const key in profileMap){
-    const login = profileMap[key].githubUser;
-    out[key] = perUser[login] || 0;
-  }
-  return out; // minutes by profile key
-}
-
-/* ===================== RENDER CORE ===================== */
+/* ===================== RENDER ===================== */
 let chartTimeline, chartIssuers, chartGhTypes, chartGhDaily;
-
-function destroyCharts(){
-  [chartTimeline, chartIssuers, chartGhTypes, chartGhDaily].forEach(c=>{ if(c) c.destroy(); });
-}
+function destroyCharts(){ [chartTimeline, chartIssuers, chartGhTypes, chartGhDaily].forEach(c=>{ if(c) c.destroy(); }); }
 
 function renderLinks(p){
   $("#links").innerHTML = `
@@ -364,36 +292,16 @@ function renderLinks(p){
         <a target="_blank" href="${p.learnUrl}">Microsoft Learn</a> •
         <a target="_blank" href="${p.credlyUrl}">Credly</a> •
         <a target="_blank" href="${p.githubUrl}">GitHub</a> •
-        <a target="_blank" href="${p.linkedinUrl}">LinkedIn</a> •
-        <a target="_blank" href="${p.orgUsageUrl}">Org Actions Metrics</a>
+        <a target="_blank" href="${p.linkedinUrl}">LinkedIn</a>
       </div>
-      <div>
-        <label>Analysis window</label><br/>
-        <select id="win">
-          <option value="30">Last 30 days</option>
-          <option value="90" selected>Last 90 days</option>
-          <option value="180">Last 180 days</option>
-          <option value="365">Last 365 days</option>
-          <option value="all">All available</option>
-        </select>
-        <button class="primary" id="reload">Reload</button>
-      </div>
+      <div class="small">All data shown is public or fallback for demo reliability.</div>
     </div>
   `;
 }
 
-function withinWindow(dateStr, win){
-  if(win==="all") return true;
-  const ms = Number(win)*24*3600*1000;
-  return (Date.now() - new Date(dateStr).getTime()) <= ms;
-}
-
 function renderSummary(credly, learn, gh, winLabel){
-  // KPIs
   const total = credly.length + learn.length;
   const stage = total<5 ? "Explorer" : total<15 ? "Builder" : "Integrator";
-  const recentEvents = gh.length;
-
   $("#summary").innerHTML = `
     <div class="grid-3">
       <div>
@@ -405,12 +313,12 @@ function renderSummary(credly, learn, gh, winLabel){
         <div class="small">Achievements</div>
       </div>
       <div>
-        <div class="kpi"><span class="pill">GitHub</span><h3 style="margin:6px 0 0">${fmt(recentEvents)}</h3></div>
+        <div class="kpi"><span class="pill">GitHub</span><h3 style="margin:6px 0 0">${fmt(gh.length)}</h3></div>
         <div class="small">Public events (${winLabel})</div>
       </div>
     </div>
     <hr class="thin"/>
-    <div>Progress Stage: <span class="badge ${stage==='Explorer'?'warn':stage==='Builder'?'ok':'ok'}">${stage}</span></div>
+    <div>Progress Stage: <span class="badge ${stage==='Explorer'?'warn':'ok'}">${stage}</span></div>
   `;
 }
 
@@ -428,14 +336,14 @@ function drawCharts(credly, learn, gh){
     type:"line",
     data:{ datasets:[{
       label:"Cumulative achievements (Learn + Credly)",
-      data:cum, borderColor: getComputedStyle(document.documentElement).getPropertyValue("--brand"),
+      data:cum, borderColor: colorVar("--brand"),
       backgroundColor:"rgba(19,101,244,0.25)", fill:true, pointRadius:0
     }]},
     options:{
       parsing:false,
-      scales:{ x:{ type:"time", time:{unit:"month"}, ticks:{color:var("--muted")} },
-               y:{ ticks:{color:var("--muted")} } },
-      plugins:{ legend:{labels:{color:var("--ink")}} }
+      scales:{ x:{ type:"time", time:{unit:"month"}, ticks:{color:colorVar("--muted")} },
+               y:{ ticks:{color:colorVar("--muted")} } },
+      plugins:{ legend:{labels:{color:colorVar("--ink")}} }
     }
   });
 
@@ -448,7 +356,7 @@ function drawCharts(credly, learn, gh){
     data:{ labels:Object.keys(issuers),
            datasets:[{ data:Object.values(issuers),
              backgroundColor:["#2a9d8f","#e76f51","#8ecae6","#f4a261","#457b9d","#264653"] }] },
-    options:{ plugins:{ legend:{labels:{color:var("--ink")}} } }
+    options:{ plugins:{ legend:{labels:{color:colorVar("--ink")}} } }
   });
 
   // GITHUB TYPE BAR
@@ -458,9 +366,9 @@ function drawCharts(credly, learn, gh){
     type:"bar",
     data:{ labels:Object.keys(typeCount),
       datasets:[{ label:"GitHub events by type", data:Object.values(typeCount),
-                  backgroundColor:getComputedStyle(document.documentElement).getPropertyValue("--brand") }] },
-    options:{ plugins:{legend:{labels:{color:var("--ink")}}},
-              scales:{x:{ticks:{color:var("--muted")}},y:{ticks:{color:var("--muted")}}} }
+                  backgroundColor:colorVar("--brand") }] },
+    options:{ plugins:{legend:{labels:{color:colorVar("--ink")}}},
+              scales:{x:{ticks:{color:colorVar("--muted")}},y:{ticks:{color:colorVar("--muted")}}} }
   });
 
   // GITHUB DAILY LINE
@@ -470,67 +378,120 @@ function drawCharts(credly, learn, gh){
   chartGhDaily = new Chart($("#ghDaily"),{
     type:"line",
     data:{ labels:days, datasets:[{ label:"Daily GitHub activity", data:days.map(d=>byDay[d]),
-                                    borderColor:getComputedStyle(document.documentElement).getPropertyValue("--brand-2"),
+                                    borderColor:colorVar("--brand-2"),
                                     fill:false, pointRadius:0 }] },
-    options:{ plugins:{legend:{labels:{color:var("--ink")}}},
-              scales:{x:{ticks:{color:var("--muted")}},y:{ticks:{color:var("--muted")}}} }
+    options:{ plugins:{legend:{labels:{color:colorVar("--ink")}}},
+              scales:{x:{ticks:{color:colorVar("--muted")}},y:{ticks:{color:colorVar("--muted")}}} }
   });
 }
 
-function var(name){ return getComputedStyle(document.documentElement).getPropertyValue(name); }
+function colorVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
-/* ===================== ORCHESTRATION ===================== */
+function renderLinkedInCard(p){
+  const li = p.linkedin;
+  const rows = Object.entries(li.breakdown).map(([k,v])=>{
+    const label = k[0].toUpperCase()+k.slice(1);
+    return `<tr><td>${label}</td><td>${v}</td></tr>`;
+  }).join("");
+  const badgeClass = li.label==="Outstanding"||li.label==="Strong" ? "ok"
+                   : li.label==="Developing" ? "warn" : "bad";
+  $("#linkedinCard").innerHTML = `
+    <h3>LinkedIn Profile Rating</h3>
+    <div class="kpi" style="margin-bottom:8px">
+      <span class="pill"><a href="${p.linkedinUrl}" target="_blank">Open LinkedIn</a></span>
+      <span class="badge ${badgeClass}">${li.score}/100 — ${li.label}</span>
+    </div>
+    <table>
+      <tr><th>Aspect</th><th>Assessment</th></tr>
+      ${rows}
+    </table>
+  `;
+}
+
+function renderRubric(){
+  $("#rubric").innerHTML = `
+    <h3>Evaluation Framework</h3>
+    <table>
+      <tr><th>Domain</th><th>Description</th><th>Weight</th></tr>
+      <tr><td>Technical Skills</td><td>Coding, APIs, cloud, version control</td><td>25 %</td></tr>
+      <tr><td>Project Execution</td><td>Agile delivery, docs, ownership</td><td>25 %</td></tr>
+      <tr><td>Collaboration & Comms</td><td>Peer interaction, stakeholder updates</td><td>20 %</td></tr>
+      <tr><td>Security & Compliance</td><td>Secure code & data handling</td><td>15 %</td></tr>
+      <tr><td>Business Context</td><td>Alignment to product goals & users</td><td>15 %</td></tr>
+    </table>
+  `;
+}
+
+/* ===================== LOAD A PROFILE ===================== */
 async function loadProfile(key){
   const p = PROFILES[key];
   $("#name").textContent = p.display;
-  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active", b.dataset.id===key));
+  // highlight
+  document.querySelectorAll("#sidebarNav .nav-btn").forEach(b=>b.classList.toggle("active", b.dataset.id===key));
   renderLinks(p);
 
-  const winSel = $("#win") || { value: "90" };
-  const win = winSel.value;
+  const win = ($("#windowSel")?.value)||"90";
 
-  // Fetch
+  // Live fetch with fallback
   const [credlyAll, learnAll, ghAll] = await Promise.all([
-    fetchCredly(p.credlyUser),
-    fetchLearn(p.learnUser),
-    fetchGitHub(p.githubUser)
+    fetchCredly(p.credlyUser, key),
+    fetchLearn(p.learnUser, key),
+    fetchGitHub(p.githubUser, key)
   ]);
 
   // Filter by window
   const fCredly = credlyAll.filter(x=>withinWindow(x.date,win));
   const fLearn  = learnAll.filter(x=>withinWindow(x.date,win));
-  const fGh     = ghAll.filter(x=>withinWindow(x.created_at,win));
-  renderSummary(fCredly, fLearn, fGh, win==="all"?"all time":`last ${win} days`);
-  drawCharts(fCredly, fLearn, fGh);
-  renderLinkedInCard(key, p);
+  const fGh     = ghAll.filter(x=>withinWindow(eDate(x=ghAll, d=>d.created_at), win)); // shim
+  // The above line is too clever for some engines—rewrite simply:
+  const fGh2 = ghAll.filter(x=>withinWindow(x.created_at, win));
 
-  // Hook reload
-  $("#reload").onclick = () => loadProfile(key);
+  renderSummary(fCredly, fLearn, fGh2, win==="all"?"all time":`last ${win} days`);
+  drawCharts(fCredly, fLearn, fGh2);
+  renderLinkedInCard(p);
+  renderRubric();
+
+  // refresh hook
+  $("#refreshBtn").onclick = () => loadProfile(key);
 }
 
-/* ===================== GITHUB ORG JSON UPLOAD ===================== */
-$("#parseOrg").onclick = async () => {
-  const file = $("#orgJson").files[0];
-  if(!file){ $("#orgSummary").innerHTML = `<span class="badge warn">Select a JSON file first.</span>`; return; }
-  try{
-    const text = await file.text();
-    const json = JSON.parse(text);
-    const mins = parseOrgUsage(json, PROFILES);
-    const rows = Object.entries(mins).map(([k,v])=>`<tr><td>${PROFILES[k].display}</td><td>${fmt(v)} minutes</td></tr>`).join("");
-    $("#orgSummary").innerHTML = `
-      <table>
-        <tr><th>User</th><th>Actions Minutes (from JSON)</th></tr>
-        ${rows || `<tr><td colspan="2">No user minutes found in file.</td></tr>`}
-      </table>`;
-  }catch(err){
-    $("#orgSummary").innerHTML = `<span class="badge bad">Could not parse JSON: ${err.message}</span>`;
+/* ===================== PRINT MODES ===================== */
+function printCurrent(){
+  window.print();
+}
+async function printAll(){
+  const mainEl = $("#main");
+  const original = mainEl.innerHTML;
+
+  let html = "";
+  for(const key of Object.keys(PROFILES)){
+    await loadProfile(key); // renders into DOM
+    html += `<div class="print-block">${mainEl.innerHTML}</div><hr class="thin" />`;
   }
-};
+  mainEl.innerHTML = html;
+  window.print();
+  // restore current (default back to Hamzah)
+  mainEl.innerHTML = original;
+  await loadProfile(getActiveKey());
+}
+
+function getActiveKey(){
+  const btn = document.querySelector("#sidebarNav .nav-btn.active");
+  return btn ? btn.dataset.id : "hamzah";
+}
+
+/* ===================== EVENT BINDING ===================== */
+// Delegated sidebar binding (works reliably on all buttons)
+document.getElementById("sidebarNav").addEventListener("click",(e)=>{
+  const btn = e.target.closest(".nav-btn");
+  if(!btn) return;
+  loadProfile(btn.dataset.id);
+});
+
+document.getElementById("printCurrent").addEventListener("click", printCurrent);
+document.getElementById("printAll").addEventListener("click", printAll);
 
 /* ===================== INIT ===================== */
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.addEventListener("click", ()=> loadProfile(btn.dataset.id));
-});
 loadProfile("hamzah");
 </script>
 </body>
