@@ -1,17 +1,17 @@
 <div align="center">
 
-<img src="assets/favicon.png" width="120" alt="Skunkworks LearnSync Logo"/>
+<img src="assets/favicon.png" width="120" alt="Sedge Emterprise LearnSync Logo"/>
 
-# 🧭 Skunkworks LearnSync Dashboard  
+# 🧭 Sedge Enterprise LearnSync Dashboard  
 ### Unified Analytics for Microsoft Learn • Credly • GitHub • LinkedIn
 
-[![Status](https://img.shields.io/badge/status-active-success.svg)](https://skunkworks.africa)
-[![Live Demo](https://img.shields.io/badge/view-online-blue.svg)](https://skunkworks-africa.github.io/learnsync-dashboard/)
-[![License](https://img.shields.io/github/license/skunkworks-africa/learnsync-dashboard.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/skunkworks-africa/learnsync-dashboard?style=social)](https://github.com/skunkworks-africa/learnsync-dashboard)
-[![Last Commit](https://img.shields.io/github/last-commit/skunkworks-africa/learnsync-dashboard?color=brightgreen)](https://github.com/skunkworks-africa/learnsync-dashboard/commits/main)
+[![Status](https://img.shields.io/badge/status-active-success.svg)](https://sedgent.co.za)
+[![Live Demo](https://img.shields.io/badge/view-online-blue.svg)](https://sedge-enterprise.github.io/learnsync-dashboard/)
+[![License](https://img.shields.io/github/license/sedge-enterprise/learnsync-dashboard.svg)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/sedge-enterprise/learnsync-dashboard?style=social)](https://github.com/sedge-enterprise/learnsync-dashboard)
+[![Last Commit](https://img.shields.io/github/last-commit/sedge-enterprise/learnsync-dashboard?color=brightgreen)](https://github.com/sedge-enterprise/learnsync-dashboard/commits/main)
 [![Code Quality](https://img.shields.io/badge/code_quality-A%2B-brightgreen)](#)
-[![Made by Skunkworks](https://img.shields.io/badge/Made%20by-Skunkworks%20Africa-black.svg?logo=github)](https://skunkworks.africa)
+[![Made by Skunkworks](https://img.shields.io/badge/Made%20by-Sedge%20Enterprise-black.svg?logo=github)](https://sedgent.co.za)
 
 </div>
 
@@ -19,13 +19,13 @@
 
 ## 📘 Overview
 
-**Skunkworks LearnSync** is a unified analytics dashboard designed to evaluate learners, interns, and training participants by integrating data from multiple learning ecosystems:
+**Sedge Enterprise LearnSync** is a unified analytics dashboard designed to evaluate learners, interns, and training participants by integrating data from multiple learning ecosystems:
 - 🎓 **Microsoft Learn** — tracks modules, achievements, and certifications  
 - 🏅 **Credly** — verifies badges and issuers  
 - 🧠 **GitHub** — analyzes coding activity and contributions  
 - 💼 **LinkedIn** — scores professional presence and engagement  
 
-This tool was developed for **Skunkworks Africa’s training and mentorship programs** to provide insight into learner growth, engagement, and digital credibility in real-time.
+This tool was developed for **Sedge Enterprise training and mentorship programs** to provide insight into learner growth, engagement, and digital credibility in real-time.
 
 ---
 
@@ -77,7 +77,7 @@ learnsync-dashboard/
 
 1️⃣ Clone or Fork the Repo
 
-git clone https://github.com/skunkworks-africa/learnsync-dashboard.git
+git clone https://github.com/sedge-enterprise/learnsync-dashboard.git
 cd learnsync-dashboard
 
 2️⃣ Run Locally
@@ -93,7 +93,7 @@ Then open:
 	•	Go to Settings → Pages
 	•	Select branch: main, folder: / (root)
 	•	Your dashboard will be live at:
-https://skunkworks-africa.github.io/learnsync-dashboard/
+https://sedge-enterprise.github.io/learnsync-dashboard/
 
 ⸻
 
@@ -149,7 +149,7 @@ GitHub	https://api.github.com/users/{user}/events/public	User commits, PRs, issu
 ⸻
 
 💡 Use Cases
-	•	Skunkworks Academy learner evaluation
+	•	Sedge Enterprise learner evaluation
 	•	Internship analytics dashboard
 	•	AI-driven training analytics
 	•	Corporate learning insight visualization
@@ -159,7 +159,7 @@ GitHub	https://api.github.com/users/{user}/events/public	User commits, PRs, issu
 
 🧑‍💻 Contributing
 
-We welcome contributions from the Skunkworks community!
+We welcome contributions from the Sedge Enterprise community!
 
 Fork, branch, and open a PR:
 
@@ -190,11 +190,11 @@ See the LICENSE file for details.
 💡 Developed with pride by Skunkworks Africa
 Empowering digital transformation through AI, Cloud, and Training Innovation
 
-🔗 Skunkworks Academy • Skunkworks Digital
-📧 raydo@skunkworks.africa
+🔗 Sedge Enterprise • Skunkworks Academy
+📧 raydo.m@sedgent.co.za
 
 ⸻
 
-#LearnSync • #SkunkworksAcademy • #AIinEducation • #AnalyticsDashboard
+#LearnSync • #SedgeEnterprise • #SkunkworksAcademy • #AIinEducation • #AnalyticsDashboard
 
 </div>
