@@ -2,135 +2,536 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Skunkworks LearnSync Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+<!-- Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/date-fns@3.6.0/dist/date-fns.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
 <style>
-  body { background:#0a0f14; color:#e5eef5; font-family:Inter,Arial,sans-serif; margin:0; }
-  header { background:#0d1b26; padding:20px; border-bottom:1px solid #14212e; }
-  h1 { margin:0; font-size:22px; }
-  main { padding:20px; max-width:1200px; margin:auto; }
-  .card { background:#0d1b26; border:1px solid #14212e; border-radius:10px; padding:20px; margin-bottom:24px; }
-  select, button { background:#0a0f14; color:#e5eef5; border:1px solid #14212e; border-radius:8px; padding:8px 12px; }
-  button { background:#1365f4; border:none; cursor:pointer; font-weight:600; }
-  button:hover { background:#1a7bff; }
-  .charts { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; }
-  th,td { border-bottom:1px solid #14212e; padding:8px 10px; font-size:14px; text-align:left; }
-  .profile-links a { color:#8ecae6; text-decoration:none; margin-right:15px; }
-  .small { color:#8ba0b8; font-size:13px; }
+:root{
+  --bg:#0b0f14; --panel:#0e1621; --ink:#e6eef7; --muted:#9eb2c9;
+  --line:#172434; --brand:#1365f4; --brand-2:#4cc9f0; --ok:#2a9d8f; --warn:#f4a261; --bad:#e76f51;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif}
+
+/* Layout */
+.app{display:grid;grid-template-columns:280px 1fr;height:100vh;overflow:hidden}
+aside{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.brand{padding:18px 18px;border-bottom:1px solid var(--line);font-weight:700;letter-spacing:.2px}
+nav{flex:1;overflow:auto}
+nav button{width:100%;text-align:left;background:transparent;border:none;color:var(--muted);
+  padding:14px 18px;cursor:pointer;font-size:15px;border-bottom:1px solid transparent}
+nav button:hover{background:#0f1d2c;color:var(--ink)}
+nav button.active{background:#12243a;border-bottom:1px solid var(--line);color:var(--ink)}
+.side-foot{border-top:1px solid var(--line);padding:12px 18px;color:var(--muted);font-size:12px}
+
+main{overflow:auto;padding:22px}
+h1{margin:0 0 6px 0;font-size:22px}
+.small{color:var(--muted);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 18px 0}
+.row{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid-2{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+.grid-3{display:grid;gap:16px;grid-template-columns:repeat(3,1fr)}
+@media (max-width:1000px){ .grid-2,.grid-3{grid-template-columns:1fr} }
+
+a{color:#8ecae6;text-decoration:none} a:hover{text-decoration:underline}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);font-size:14px;text-align:left}
+.kpi{display:flex;gap:10px;align-items:center}
+.kpi .pill{padding:4px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px}
+button,select,input[type="file"]{background:#0a131e;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+button.primary{background:var(--brand);border:none;color:#fff;font-weight:600;cursor:pointer}
+button.primary:hover{filter:brightness(1.08)}
+input[type="number"],input[type="text"],textarea{width:100%;background:#0a131e;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+label{font-size:13px;color:var(--muted)}
+hr.thin{border:none;border-top:1px solid var(--line);margin:10px 0}
+.badge{padding:2px 8px;border-radius:999px;font-size:12px;color:#000}
+.badge.ok{background:var(--ok)} .badge.warn{background:var(--warn)} .badge.bad{background:var(--bad)}
+.canvas-wrap{min-height:340px}
 </style>
 </head>
 <body>
-<header><h1>Skunkworks LearnSync Dashboard</h1></header>
-<main>
-  <div class="card">
-    <label for="intern">Select Intern:</label>
-    <select id="intern">
-      <option value="hamzah-mahomed">Hamzah Mohamed</option>
-      <option value="khutjo-satekge">Khutjo Satekge</option>
-      <option value="nokuthulamangweni">Nokuthula Mangweni</option>
-    </select>
-    <button id="load">Load Progress</button>
-    <p class="small">Displays Microsoft Learn and Credly progress for the selected intern.</p>
-  </div>
-  <div id="profile"></div>
-  <div id="metrics"></div>
-  <div id="charts"></div>
-</main>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="brand">Skunkworks LearnSync</div>
+    <nav>
+      <button class="active" data-id="hamzah">Hamzah Mahomed</button>
+      <button data-id="khutjo">Khutjo Satekge</button>
+      <button data-id="nokuthula">Nokuthula Mangweni</button>
+    </nav>
+    <div class="side-foot">© 2025 Skunkworks Africa</div>
+  </aside>
+
+  <!-- Main -->
+  <main>
+    <header>
+      <h1 id="name">Hamzah Mahomed</h1>
+      <div class="small">Unified view: Microsoft Learn • Credly • GitHub • LinkedIn</div>
+    </header>
+
+    <!-- Profile Links + Controls -->
+    <section id="links" class="card"></section>
+
+    <!-- Summary KPIs -->
+    <section id="summary" class="card"></section>
+
+    <!-- Charts -->
+    <section class="card">
+      <div class="grid-2">
+        <div class="canvas-wrap"><canvas id="timeline"></canvas></div>
+        <div class="canvas-wrap"><canvas id="issuers"></canvas></div>
+      </div>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="canvas-wrap"><canvas id="ghTypes"></canvas></div>
+        <div class="canvas-wrap"><canvas id="ghDaily"></canvas></div>
+      </div>
+    </section>
+
+    <!-- LinkedIn Rating -->
+    <section id="linkedinCard" class="card"></section>
+
+    <!-- GitHub Org Actions Metrics (optional JSON upload) -->
+    <section class="card">
+      <h3>GitHub Org Actions Metrics (Optional Upload)</h3>
+      <p class="small">For private metrics (minutes used, billable, etc.), export JSON from
+        <a href="https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage" target="_blank">Org → Actions → Usage</a> and upload it here to enrich charts locally.</p>
+      <div class="row">
+        <div>
+          <label>Upload JSON export</label><br/>
+          <input type="file" id="orgJson" accept=".json"/>
+        </div>
+        <div>
+          <button class="primary" id="parseOrg">Parse & Merge</button>
+        </div>
+      </div>
+      <div id="orgSummary" style="margin-top:10px"></div>
+    </section>
+
+    <!-- Rubric -->
+    <section id="rubric" class="card"></section>
+  </main>
+</div>
 
 <script>
-const profiles={
-  "hamzah-mahomed":{
-    learn:"https://learn.microsoft.com/en-us/users/hamzah-mahomed/",
-    credly:"https://www.credly.com/users/hamzah-mahomet/badges"
+/* ===================== CONFIG ===================== */
+const PROFILES = {
+  hamzah: {
+    display: "Hamzah Mahomed",
+    learnUrl:  "https://learn.microsoft.com/en-us/users/hamzah-mahomed/",
+    credlyUrl: "https://www.credly.com/users/hamzah-mahomet/badges",
+    githubUrl: "https://github.com/HMahomed",
+    linkedinUrl: "https://www.linkedin.com/in/hamzah-m/",
+    orgUsageUrl: "https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage",
+    learnUser: "hamzah-mahomed",
+    credlyUser: "hamzah-mahomet",
+    githubUser: "HMahomed"
   },
-  "khutjo-satekge":{
-    learn:"https://learn.microsoft.com/en-us/users/Khutjo-Satekge/",
-    credly:"https://www.credly.com/users/khutjo-satekge/badges"
+  khutjo: {
+    display: "Khutjo Satekge",
+    learnUrl:  "https://learn.microsoft.com/en-us/users/Khutjo-Satekge/",
+    credlyUrl: "https://www.credly.com/users/khutjo-satekge/badges",
+    githubUrl: "https://github.com/satekge-khutjo",
+    linkedinUrl: "https://www.linkedin.com/in/khutjo-satekge-06b174152/",
+    orgUsageUrl: "https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage",
+    learnUser: "Khutjo-Satekge",
+    credlyUser: "khutjo-satekge",
+    githubUser: "satekge-khutjo"
   },
-  "nokuthulamangweni":{
-    learn:"https://learn.microsoft.com/en-us/users/nokuthulamangweni/",
-    credly:"https://www.credly.com/users/nokuthula-mangweni/badges"
+  nokuthula: {
+    display: "Nokuthula Mangweni",
+    learnUrl:  "https://learn.microsoft.com/en-us/users/nokuthulamangweni/",
+    credlyUrl: "https://www.credly.com/users/nokuthula-mangweni/badges",
+    githubUrl: "https://github.com/mangweninokuthula7-cmyk",
+    linkedinUrl: "https://www.linkedin.com/in/nokuthula-mangweni/",
+    orgUsageUrl: "https://github.com/orgs/Sedge-Enterprise/actions/metrics/usage",
+    learnUser: "nokuthulamangweni",
+    credlyUser: "nokuthula-mangweni",
+    githubUser: "mangweninokuthula7-cmyk"
   }
 };
 
-async function fetchCredly(username){
-  const resp=await fetch(`https://www.credly.com/api/v1/users/${username}/badges`);
-  if(!resp.ok) return [];
-  const json=await resp.json();
-  return json.data.map(b=>({
-    name:b.attributes.name,
-    date:b.attributes.issued_at,
-    issuer:b.attributes.issuer.name
-  }));
+/* ===================== UTIL ===================== */
+const $ = (sel) => document.querySelector(sel);
+const fmt = (n) => n.toLocaleString();
+
+/* ===================== FETCHERS ===================== */
+// Credly (public)
+async function fetchCredly(user){
+  try{
+    const r = await fetch(`https://www.credly.com/api/v1/users/${encodeURIComponent(user)}/badges`);
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.data||[]).map(b => ({
+      title:  b.attributes?.name,
+      issuer: b.attributes?.issuer?.name || "Unknown",
+      date:   b.attributes?.issued_at
+    })).filter(x=>x.date);
+  }catch(e){ console.warn("Credly error", e); return []; }
 }
 
-async function fetchLearn(username){
-  const resp=await fetch(`https://learn.microsoft.com/api/learn/users/${username}`);
-  if(!resp.ok) return [];
-  const json=await resp.json();
-  if(!json.achievements) return [];
-  return json.achievements.map(a=>({
-    name:a.title || a.name,
-    date:a.completedDate,
-    issuer:"Microsoft"
-  }));
+// Microsoft Learn (public profile JSON)
+async function fetchLearn(user){
+  try{
+    const r = await fetch(`https://learn.microsoft.com/api/learn/users/${encodeURIComponent(user)}`);
+    if(!r.ok) return [];
+    const j = await r.json();
+    return (j.achievements||[]).map(a => ({
+      title:  a.title || a.name,
+      issuer: "Microsoft",
+      date:   a.completedDate || a.dateCompleted
+    })).filter(x=>x.date);
+  }catch(e){ console.warn("MS Learn error", e); return []; }
 }
 
-document.getElementById("load").onclick=async()=>{
-  const user=document.getElementById("intern").value;
-  const info=profiles[user];
-  document.getElementById("profile").innerHTML=
-    `<div class='card'><h2>${user.replace(/-/g,' ')}</h2>
-      <div class='profile-links'>
-        <a href='${info.learn}' target='_blank'>Microsoft Learn Profile</a>
-        <a href='${info.credly}' target='_blank'>Credly Profile</a>
-      </div></div>`;
-  
-  const [credly,learn]=await Promise.all([fetchCredly(user),fetchLearn(user)]);
-  const total=credly.length+learn.length;
-  const skillIndex=(credly.length*1.2 + learn.length)/2; // illustrative
-  const progressStage=total<5?"Explorer":total<15?"Builder":"Integrator";
+// GitHub user public events (activity)
+async function fetchGitHub(login){
+  try{
+    const pages=[1,2,3]; const all=[];
+    for(const p of pages){
+      const r = await fetch(`https://api.github.com/users/${login}/events/public?per_page=100&page=${p}`);
+      if(!r.ok) break;
+      const j = await r.json();
+      if(!Array.isArray(j) || !j.length) break;
+      all.push(...j);
+    }
+    return all; // array of events
+  }catch(e){ console.warn("GitHub error", e); return []; }
+}
 
-  document.getElementById("metrics").innerHTML=`
-    <div class='card'>
-      <h3>Performance Summary</h3>
-      <table>
-        <tr><th>Metric</th><th>Score / Count</th></tr>
-        <tr><td>Total Badges</td><td>${credly.length}</td></tr>
-        <tr><td>Learn Modules Completed</td><td>${learn.length}</td></tr>
-        <tr><td>Skill Mastery Index</td><td>${skillIndex.toFixed(2)}</td></tr>
-        <tr><td>Progress Stage</td><td>${progressStage}</td></tr>
-      </table>
+/* ===================== LINKEDIN RATER ===================== */
+/* Scoring model (0–100): photo/banner 10, headline/summary 20, experience/education 15,
+   skills/endorsements 15, connections/activity 20, URL/completeness 20 */
+function scoreLinkedIn(input){
+  const clamp=(x,m)=>Math.max(0,Math.min(m,x));
+  let score=0;
+
+  // Photo & banner
+  score += (input.photo?5:0) + (input.banner?5:0);
+
+  // Headline & Summary
+  score += clamp(Math.round((input.headlineLen>=40?10:input.headlineLen/4)),10);
+  score += clamp(Math.round((input.aboutLen>=200?10:input.aboutLen/20)),10);
+
+  // Experience & Education
+  score += clamp(Math.round(Math.min(input.experienceCount,5)*2.5),12) + (input.education?3:0);
+
+  // Skills & Endorsements
+  score += clamp(Math.round(Math.min(input.skillsCount,15)),12) + clamp(Math.round(Math.min(input.endorsements,10)/2),3);
+
+  // Connections & Activity
+  const conn = input.connections>=500 ? 20 : input.connections>=250 ? 16 : input.connections>=100 ? 12 : input.connections>=50 ? 9 : 5;
+  const act  = input.posts30>=4 ? 5 : input.posts30>=2 ? 3 : input.posts30>=1 ? 2 : 0;
+  score += conn/2 + act/2 + conn/2 + act/2; // keeps total near 20 while rewarding both
+
+  // URL & Completeness
+  score += (input.customUrl?8:0) + (input.allStar?12:0);
+
+  return Math.round(score);
+}
+function labelScore(n){
+  if(n>=91) return {t:"Outstanding", c:"ok"};
+  if(n>=75) return {t:"Strong", c:"ok"};
+  if(n>=50) return {t:"Developing", c:"warn"};
+  return {t:"Needs Improvement", c:"bad"};
+}
+function loadLinkedInSaved(key){ try{ return JSON.parse(localStorage.getItem("li:"+key))||null }catch{ return null } }
+function saveLinkedIn(key,obj){ localStorage.setItem("li:"+key, JSON.stringify(obj)) }
+
+/* Render LinkedIn Scoring UI */
+function renderLinkedInCard(key, profile){
+  const saved = loadLinkedInSaved(key) || {
+    photo:false,banner:false,headlineLen:0,aboutLen:0,experienceCount:0,education:false,
+    skillsCount:0,endorsements:0,connections:0,posts30:0,customUrl:false,allStar:false
+  };
+  const score = scoreLinkedIn(saved);
+  const lab = labelScore(score);
+
+  $("#linkedinCard").innerHTML = `
+    <h3>LinkedIn Profile Rating</h3>
+    <div class="kpi" style="margin-bottom:8px">
+      <span class="pill">Profile: <a href="${profile.linkedinUrl}" target="_blank">Open LinkedIn</a></span>
+      <span class="pill">Stored locally · editable</span>
+      <span class="badge ${lab.c}">${score}/100 — ${lab.t}</span>
+    </div>
+    <div class="row">
+      <div>
+        <label>Has profile photo?</label><br/><input type="checkbox" id="li_photo" ${saved.photo?"checked":""}/>
+      </div>
+      <div>
+        <label>Has banner image?</label><br/><input type="checkbox" id="li_banner" ${saved.banner?"checked":""}/>
+      </div>
+      <div>
+        <label>Headline length (characters)</label><br/><input type="number" id="li_head" min="0" value="${saved.headlineLen}"/>
+      </div>
+      <div>
+        <label>About length (characters)</label><br/><input type="number" id="li_about" min="0" value="${saved.aboutLen}"/>
+      </div>
+      <div>
+        <label>Experience entries (count)</label><br/><input type="number" id="li_exp" min="0" value="${saved.experienceCount}"/>
+      </div>
+      <div>
+        <label>Education section present?</label><br/><input type="checkbox" id="li_edu" ${saved.education?"checked":""}/>
+      </div>
+      <div>
+        <label>Skills (count)</label><br/><input type="number" id="li_skills" min="0" value="${saved.skillsCount}"/>
+      </div>
+      <div>
+        <label>Endorsements (approx.)</label><br/><input type="number" id="li_end" min="0" value="${saved.endorsements}"/>
+      </div>
+      <div>
+        <label>Connections (approx.)</label><br/><input type="number" id="li_conn" min="0" value="${saved.connections}"/>
+      </div>
+      <div>
+        <label>Posts in last 30 days</label><br/><input type="number" id="li_posts" min="0" value="${saved.posts30}"/>
+      </div>
+      <div>
+        <label>Custom public URL?</label><br/><input type="checkbox" id="li_url" ${saved.customUrl?"checked":""}/>
+      </div>
+      <div>
+        <label>Profile strength: All-Star?</label><br/><input type="checkbox" id="li_star" ${saved.allStar?"checked":""}/>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="primary" id="li_save">Save & Recalculate</button>
     </div>
   `;
 
-  const ctx1=document.createElement("canvas");
-  const ctx2=document.createElement("canvas");
-  document.getElementById("charts").innerHTML="<div class='card charts'></div>";
-  document.querySelector(".charts").append(ctx1,ctx2);
+  $("#li_save").onclick = () => {
+    const obj = {
+      photo: $("#li_photo").checked,
+      banner: $("#li_banner").checked,
+      headlineLen: Number($("#li_head").value||0),
+      aboutLen: Number($("#li_about").value||0),
+      experienceCount: Number($("#li_exp").value||0),
+      education: $("#li_edu").checked,
+      skillsCount: Number($("#li_skills").value||0),
+      endorsements: Number($("#li_end").value||0),
+      connections: Number($("#li_conn").value||0),
+      posts30: Number($("#li_posts").value||0),
+      customUrl: $("#li_url").checked,
+      allStar: $("#li_star").checked
+    };
+    saveLinkedIn(key,obj);
+    renderLinkedInCard(key, profile); // re-render with new score
+  };
+}
 
-  const all=[...credly.map(i=>({x:new Date(i.date),y:1})),
-             ...learn.map(i=>({x:new Date(i.date),y:1}))].sort((a,b)=>a.x-b.x);
-  let cumulative=[];let c=0;for(const a of all){c++;cumulative.push({x:a.x,y:c});}
+/* ===================== ORG JSON PARSER ===================== */
+/* Accepts a GitHub Actions usage export JSON and aggregates minutes per user login */
+function parseOrgUsage(json, profileMap){
+  // Attempt to read common shapes: {items:[{repository,usage:{minutesUsedByActions}}]} OR per-billing-period arrays
+  let perUser = {};
+  const digs = (obj) => {
+    if(Array.isArray(obj)){ obj.forEach(digs); return; }
+    if(obj && typeof obj === "object"){
+      if(obj.actor && obj.minutes){
+        const login = obj.actor.login || obj.actor; const min = Number(obj.minutes)||0;
+        perUser[login] = (perUser[login]||0) + min;
+      }
+      for(const k in obj) digs(obj[k]);
+    }
+  };
+  digs(json);
 
-  new Chart(ctx1,{type:"line",
-    data:{datasets:[{label:"Cumulative Achievements",data:cumulative,
-      borderColor:"#1a7bff",backgroundColor:"rgba(26,123,255,0.3)",fill:true}]},
-    options:{scales:{x:{type:"time",time:{unit:"month"},ticks:{color:"#8ba0b8"}},
-      y:{ticks:{color:"#8ba0b8"}}},plugins:{legend:{labels:{color:"#e5eef5"}}}}});
+  // Map into our profiles
+  const out = {};
+  for(const key in profileMap){
+    const login = profileMap[key].githubUser;
+    out[key] = perUser[login] || 0;
+  }
+  return out; // minutes by profile key
+}
 
+/* ===================== RENDER CORE ===================== */
+let chartTimeline, chartIssuers, chartGhTypes, chartGhDaily;
+
+function destroyCharts(){
+  [chartTimeline, chartIssuers, chartGhTypes, chartGhDaily].forEach(c=>{ if(c) c.destroy(); });
+}
+
+function renderLinks(p){
+  $("#links").innerHTML = `
+    <div class="row">
+      <div>
+        <b>Profiles</b><br/>
+        <a target="_blank" href="${p.learnUrl}">Microsoft Learn</a> •
+        <a target="_blank" href="${p.credlyUrl}">Credly</a> •
+        <a target="_blank" href="${p.githubUrl}">GitHub</a> •
+        <a target="_blank" href="${p.linkedinUrl}">LinkedIn</a> •
+        <a target="_blank" href="${p.orgUsageUrl}">Org Actions Metrics</a>
+      </div>
+      <div>
+        <label>Analysis window</label><br/>
+        <select id="win">
+          <option value="30">Last 30 days</option>
+          <option value="90" selected>Last 90 days</option>
+          <option value="180">Last 180 days</option>
+          <option value="365">Last 365 days</option>
+          <option value="all">All available</option>
+        </select>
+        <button class="primary" id="reload">Reload</button>
+      </div>
+    </div>
+  `;
+}
+
+function withinWindow(dateStr, win){
+  if(win==="all") return true;
+  const ms = Number(win)*24*3600*1000;
+  return (Date.now() - new Date(dateStr).getTime()) <= ms;
+}
+
+function renderSummary(credly, learn, gh, winLabel){
+  // KPIs
+  const total = credly.length + learn.length;
+  const stage = total<5 ? "Explorer" : total<15 ? "Builder" : "Integrator";
+  const recentEvents = gh.length;
+
+  $("#summary").innerHTML = `
+    <div class="grid-3">
+      <div>
+        <div class="kpi"><span class="pill">Credly</span><h3 style="margin:6px 0 0">${fmt(credly.length)}</h3></div>
+        <div class="small">Total certifications/badges</div>
+      </div>
+      <div>
+        <div class="kpi"><span class="pill">Microsoft Learn</span><h3 style="margin:6px 0 0">${fmt(learn.length)}</h3></div>
+        <div class="small">Achievements</div>
+      </div>
+      <div>
+        <div class="kpi"><span class="pill">GitHub</span><h3 style="margin:6px 0 0">${fmt(recentEvents)}</h3></div>
+        <div class="small">Public events (${winLabel})</div>
+      </div>
+    </div>
+    <hr class="thin"/>
+    <div>Progress Stage: <span class="badge ${stage==='Explorer'?'warn':stage==='Builder'?'ok':'ok'}">${stage}</span></div>
+  `;
+}
+
+function drawCharts(credly, learn, gh){
+  destroyCharts();
+
+  // TIMELINE (cumulative)
+  const merged = [
+    ...credly.map(x=>({x:new Date(x.date), y:1})),
+    ...learn.map(x=>({x:new Date(x.date), y:1}))
+  ].sort((a,b)=>a.x-b.x);
+  let cum=[]; let c=0; for(const m of merged){ c++; cum.push({x:m.x,y:c}); }
+
+  chartTimeline = new Chart($("#timeline"), {
+    type:"line",
+    data:{ datasets:[{
+      label:"Cumulative achievements (Learn + Credly)",
+      data:cum, borderColor: getComputedStyle(document.documentElement).getPropertyValue("--brand"),
+      backgroundColor:"rgba(19,101,244,0.25)", fill:true, pointRadius:0
+    }]},
+    options:{
+      parsing:false,
+      scales:{ x:{ type:"time", time:{unit:"month"}, ticks:{color:var("--muted")} },
+               y:{ ticks:{color:var("--muted")} } },
+      plugins:{ legend:{labels:{color:var("--ink")}} }
+    }
+  });
+
+  // ISSUER PIE
   const issuers={};
   credly.forEach(i=>issuers[i.issuer]=(issuers[i.issuer]||0)+1);
   learn.forEach(i=>issuers[i.issuer]=(issuers[i.issuer]||0)+1);
+  chartIssuers = new Chart($("#issuers"), {
+    type:"doughnut",
+    data:{ labels:Object.keys(issuers),
+           datasets:[{ data:Object.values(issuers),
+             backgroundColor:["#2a9d8f","#e76f51","#8ecae6","#f4a261","#457b9d","#264653"] }] },
+    options:{ plugins:{ legend:{labels:{color:var("--ink")}} } }
+  });
 
-  new Chart(ctx2,{type:"pie",
-    data:{labels:Object.keys(issuers),
-      datasets:[{data:Object.values(issuers),
-      backgroundColor:["#2a9d8f","#e76f51","#8ecae6","#f4a261"]}]},
-    options:{plugins:{legend:{labels:{color:"#e5eef5"}}}}});
+  // GITHUB TYPE BAR
+  const typeCount = {};
+  gh.forEach(e=>typeCount[e.type]=(typeCount[e.type]||0)+1);
+  chartGhTypes = new Chart($("#ghTypes"),{
+    type:"bar",
+    data:{ labels:Object.keys(typeCount),
+      datasets:[{ label:"GitHub events by type", data:Object.values(typeCount),
+                  backgroundColor:getComputedStyle(document.documentElement).getPropertyValue("--brand") }] },
+    options:{ plugins:{legend:{labels:{color:var("--ink")}}},
+              scales:{x:{ticks:{color:var("--muted")}},y:{ticks:{color:var("--muted")}}} }
+  });
+
+  // GITHUB DAILY LINE
+  const byDay={};
+  gh.forEach(e=>{ const d = e.created_at.split("T")[0]; byDay[d]=(byDay[d]||0)+1; });
+  const days = Object.keys(byDay).sort();
+  chartGhDaily = new Chart($("#ghDaily"),{
+    type:"line",
+    data:{ labels:days, datasets:[{ label:"Daily GitHub activity", data:days.map(d=>byDay[d]),
+                                    borderColor:getComputedStyle(document.documentElement).getPropertyValue("--brand-2"),
+                                    fill:false, pointRadius:0 }] },
+    options:{ plugins:{legend:{labels:{color:var("--ink")}}},
+              scales:{x:{ticks:{color:var("--muted")}},y:{ticks:{color:var("--muted")}}} }
+  });
+}
+
+function var(name){ return getComputedStyle(document.documentElement).getPropertyValue(name); }
+
+/* ===================== ORCHESTRATION ===================== */
+async function loadProfile(key){
+  const p = PROFILES[key];
+  $("#name").textContent = p.display;
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active", b.dataset.id===key));
+  renderLinks(p);
+
+  const winSel = $("#win") || { value: "90" };
+  const win = winSel.value;
+
+  // Fetch
+  const [credlyAll, learnAll, ghAll] = await Promise.all([
+    fetchCredly(p.credlyUser),
+    fetchLearn(p.learnUser),
+    fetchGitHub(p.githubUser)
+  ]);
+
+  // Filter by window
+  const fCredly = credlyAll.filter(x=>withinWindow(x.date,win));
+  const fLearn  = learnAll.filter(x=>withinWindow(x.date,win));
+  const fGh     = ghAll.filter(x=>withinWindow(x.created_at,win));
+  renderSummary(fCredly, fLearn, fGh, win==="all"?"all time":`last ${win} days`);
+  drawCharts(fCredly, fLearn, fGh);
+  renderLinkedInCard(key, p);
+
+  // Hook reload
+  $("#reload").onclick = () => loadProfile(key);
+}
+
+/* ===================== GITHUB ORG JSON UPLOAD ===================== */
+$("#parseOrg").onclick = async () => {
+  const file = $("#orgJson").files[0];
+  if(!file){ $("#orgSummary").innerHTML = `<span class="badge warn">Select a JSON file first.</span>`; return; }
+  try{
+    const text = await file.text();
+    const json = JSON.parse(text);
+    const mins = parseOrgUsage(json, PROFILES);
+    const rows = Object.entries(mins).map(([k,v])=>`<tr><td>${PROFILES[k].display}</td><td>${fmt(v)} minutes</td></tr>`).join("");
+    $("#orgSummary").innerHTML = `
+      <table>
+        <tr><th>User</th><th>Actions Minutes (from JSON)</th></tr>
+        ${rows || `<tr><td colspan="2">No user minutes found in file.</td></tr>`}
+      </table>`;
+  }catch(err){
+    $("#orgSummary").innerHTML = `<span class="badge bad">Could not parse JSON: ${err.message}</span>`;
+  }
 };
+
+/* ===================== INIT ===================== */
+document.querySelectorAll("nav button").forEach(btn=>{
+  btn.addEventListener("click", ()=> loadProfile(btn.dataset.id));
+});
+loadProfile("hamzah");
 </script>
 </body>
 </html>
